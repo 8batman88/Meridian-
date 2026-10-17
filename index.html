@@ -1,0 +1,813 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Meridian Corridor Desk</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap">
+<style>*{box-sizing:border-box}html,body{margin:0}body{min-height:100%}img{max-width:100%}[hidden]{display:none!important}:root{color-scheme:light}</style>
+<style>
+/* Layout: two-pane desk — case file inputs left, live analysis right; stacks on phones */
+:root{
+  --bg:#f3f4f1; --panel:#ffffff; --ink:#18232a; --muted:#5b6870; --line:#d9ddd8;
+  --accent:#0d5c63; --accent-soft:#e1eeee; --saffron:#c77d12;
+  --ok:#2f7d4f; --ok-bg:#e4f2e8; --warn:#9a6200; --warn-bg:#fbf0d9; --crit:#b3261e; --crit-bg:#fbe5e3;
+  --f-ui:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-doc:"Newsreader",Georgia,"Times New Roman",serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#11181c; --panel:#182227; --ink:#e4e9ea; --muted:#9aa8ae; --line:#2b383e;
+  --accent:#5fb7bd; --accent-soft:#1d3336; --saffron:#e3a34a;
+  --ok:#7cc896; --ok-bg:#1c3226; --warn:#e8b65a; --warn-bg:#352a14; --crit:#f08a82; --crit-bg:#3a1c1a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#11181c; --panel:#182227; --ink:#e4e9ea; --muted:#9aa8ae; --line:#2b383e;
+  --accent:#5fb7bd; --accent-soft:#1d3336; --saffron:#e3a34a;
+  --ok:#7cc896; --ok-bg:#1c3226; --warn:#e8b65a; --warn-bg:#352a14; --crit:#f08a82; --crit-bg:#3a1c1a; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-ui);font-size:14px;line-height:1.5}
+.wrap{max-width:1280px;margin:0 auto;padding-block:20px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header.top{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:8px 24px;border-bottom:2px solid var(--ink);padding-bottom:12px;margin-bottom:20px}
+.brand{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.brand h1{font-family:var(--f-doc);font-weight:600;font-size:30px;margin:0;letter-spacing:-.01em}
+.brand .tag{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.proto{font-family:var(--f-mono);font-size:11px;color:var(--saffron);border:1px solid var(--saffron);padding:2px 8px;border-radius:3px;text-transform:uppercase;letter-spacing:.06em}
+.grid{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:20px;align-items:start}
+@media (max-width:900px){.grid{grid-template-columns:minmax(0,1fr)}}
+.pane{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:18px;min-width:0}
+.col{display:flex;flex-direction:column;gap:20px;min-width:0}
+h2{font-size:12px;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);margin:0 0 12px;font-weight:600}
+h3{font-size:15px;margin:0;font-weight:600}
+fieldset{border:0;padding:0;margin:0 0 18px;display:grid;gap:10px}
+legend{font-size:12px;text-transform:uppercase;letter-spacing:.09em;color:var(--accent);font-weight:600;margin-bottom:8px;padding:0}
+.row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted);font-weight:500;min-width:0}
+input,select,textarea{font:inherit;font-size:14px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:7px 9px;width:100%;min-width:0}
+input:focus,select:focus,button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.mono{font-family:var(--f-mono)}
+.sh{display:grid;grid-template-columns:minmax(0,1fr) 72px 32px;gap:6px;align-items:center}
+button{font:inherit;cursor:pointer;border-radius:4px;border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:7px 12px;font-weight:500}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--panel)}
+button.ghost{border-style:dashed;color:var(--muted)}
+button.x{padding:6px 0;color:var(--muted)}
+button:disabled{opacity:.55;cursor:default}
+.hint{font-size:12px;color:var(--muted);margin:0}
+.summary{display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between}
+.rating{display:flex;align-items:center;gap:14px}
+.dial{width:64px;height:64px;border-radius:50%;display:grid;place-items:center;font-family:var(--f-mono);font-size:20px;font-weight:500;border:5px solid currentColor}
+.lvl-low{color:var(--ok)} .lvl-med{color:var(--warn)} .lvl-high{color:var(--crit)}
+.pill{display:inline-block;font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;padding:2px 8px;border-radius:99px;white-space:nowrap}
+.p-ok{background:var(--ok-bg);color:var(--ok)} .p-warn{background:var(--warn-bg);color:var(--warn)} .p-crit{background:var(--crit-bg);color:var(--crit)} .p-n{background:var(--accent-soft);color:var(--accent)}
+.flags{display:flex;flex-direction:column;gap:8px;margin:0;padding:0;list-style:none}
+.flags li{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:start;padding:8px 10px;border-radius:4px;background:var(--bg)}
+.tbl{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600}
+td.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums;text-align:right}
+.bar{height:10px;border-radius:2px;background:var(--bg);position:relative;overflow:hidden;margin-top:6px}
+.bar span{position:absolute;inset:0 auto 0 0;background:var(--crit)}
+.bar i{position:absolute;top:0;bottom:0;left:50%;width:2px;background:var(--ink)}
+.memo{font-family:var(--f-doc);font-size:16px;line-height:1.6;max-width:72ch}
+.memo h4{font-family:var(--f-ui);font-size:12px;text-transform:uppercase;letter-spacing:.09em;color:var(--accent);margin:20px 0 6px}
+.memo p{margin:0 0 10px} .memo ul{margin:0 0 10px;padding-left:20px}
+.memo .head{border-bottom:1px solid var(--line);padding-bottom:10px;margin-bottom:6px;font-family:var(--f-ui);font-size:13px;color:var(--muted);display:grid;grid-template-columns:auto 1fr;gap:2px 14px}
+.memo .head b{color:var(--ink);font-weight:600}
+.actions{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+.status{font-size:12px;color:var(--muted)}
+.dir{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+.dir div{border:1px solid var(--line);border-radius:4px;padding:10px;display:flex;flex-direction:column;gap:4px}
+.dir small{color:var(--muted);font-size:12px}
+.views{display:flex;gap:0;border:1px solid var(--ink);border-radius:5px;overflow:hidden;align-self:flex-start}
+.views button{border:0;border-radius:0;padding:10px 22px;font-weight:600;letter-spacing:.02em;background:var(--panel);color:var(--ink)}
+.views button+button{border-left:1px solid var(--ink)}
+.views button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.fix{display:grid;gap:14px}
+.fix article{border:1px solid var(--line);border-radius:5px;padding:14px;display:grid;gap:8px}
+.fix article header{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.fix ol,.fix ul{margin:0;padding-left:20px;display:grid;gap:4px}
+.fix .law{font-size:12px;color:var(--muted);border-top:1px dashed var(--line);padding-top:8px}
+.fix .law b{color:var(--accent);font-weight:600}
+.verdict{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border-radius:5px}
+.note{font-size:12px;color:var(--muted);border-left:3px solid var(--saffron);padding:6px 10px;background:var(--bg);margin:0}
+textarea{min-height:120px;font-family:var(--f-mono);font-size:12px}
+@media (prefers-reduced-motion:no-preference){.pane{transition:border-color .2s}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand"><h1>Meridian</h1><span class="tag">Corridor trade compliance desk</span></div>
+    <span class="proto">Prototype · demo data</span>
+  </header>
+
+  <div class="grid">
+    <!-- INPUTS -->
+    <form class="pane" id="f" autocomplete="off">
+      <h2>Describe the transaction</h2>
+      <p class="hint" style="margin-bottom:10px">Write the deal in plain English — who is paying, trading with or investing in whom, from where, in what currency, and who owns the counterparty. The desk screens the names and assesses it. Name a party such as "Alfabank" or "Vladimir Putin" to see screening fire.</p>
+      <textarea id="prompt" rows="6" style="min-height:150px;font-family:var(--f-ui);font-size:14px;line-height:1.5"></textarea>
+      <div class="actions" style="margin-top:10px">
+        <button type="button" class="primary" id="goBtn">Analyse</button>
+        <span class="status" id="parseStatus"></span>
+      </div>
+      <p class="hint" style="margin:12px 0 6px">Try an example</p>
+      <div id="examples" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+      <p class="note" id="parsed" style="margin-top:14px"></p>
+    </form>
+
+    <!-- RESULTS -->
+    <div class="col">
+      <div class="views" role="group" aria-label="View">
+        <button type="button" id="vRisk" aria-pressed="true">Show risks</button>
+        <button type="button" id="vRes" aria-pressed="false">Show resolve</button>
+      </div>
+      <section class="pane" data-view="risks">
+        <div style="display:flex;flex-direction:column;gap:8px;min-width:0">
+          <div id="ratingLabel"></div>
+          <span class="pill p-n" id="hitCount"></span>
+          <p class="hint" id="ratingSub" style="margin:0"></p>
+        </div>
+        <ul class="flags" id="flags" style="margin-top:16px"></ul>
+      </section>
+
+      <section class="pane" data-view="risks">
+        <h2>Screening</h2>
+        <div class="tbl"><table><thead><tr><th>Name</th><th>Role</th><th>Result</th><th>Lists</th></tr></thead><tbody id="screen"></tbody></table></div>
+        <p class="note" style="margin-top:12px">Prototype screens against a small built-in sample of designated Russian entities. The production version queries the full UK, EU, US and UN lists live.</p>
+      </section>
+
+      <section class="pane" data-view="risks">
+        <h2>Ownership and control</h2>
+        <div id="own"></div>
+      </section>
+
+      <section class="pane" data-view="risks">
+        <h2>Regulatory exposure map</h2>
+        <div class="tbl"><table><thead><tr><th>Regime</th><th>Nexus</th><th>Why</th></tr></thead><tbody id="exposure"></tbody></table></div>
+      </section>
+
+      <section class="pane" data-view="risks">
+        <h2>Compliance memo</h2>
+        <div class="actions">
+          <button type="button" class="primary" id="aiBtn" hidden>Draft full memo with Claude</button>
+          <button type="button" id="stopBtn" hidden>Stop</button>
+          <button type="button" id="copyBtn">Copy memo</button>
+          <button type="button" id="counselBtn">Request counsel review</button>
+        </div>
+        <p class="status" id="memoStatus">Standard memo generated from the rules. Use Claude to draft a fuller analysis.</p>
+        <div class="memo" id="memo"></div>
+        <div id="counsel" hidden style="margin-top:16px">
+          <h2>Counsel review request</h2>
+          <p class="hint" style="margin-bottom:8px">In the live platform this goes to counsel through secure in-app messaging. Here, copy it into an email.</p>
+          <textarea id="counselText" readonly></textarea>
+        </div>
+      </section>
+
+      <section class="pane" data-view="resolve" hidden>
+        <h2>Resolution plan</h2>
+        <div class="verdict" id="verdict"></div>
+        <div class="actions">
+          <button type="button" class="primary" id="aiRes" hidden>Draft full resolution plan with Claude</button>
+          <button type="button" id="stopRes" hidden>Stop</button>
+        </div>
+        <p class="status" id="resStatus" hidden></p>
+        <div class="memo" id="resAi" hidden></div>
+        <div class="fix" id="fix"></div>
+      </section>
+
+      <section class="pane" data-view="resolve" hidden>
+        <h2>Global South resolution stack</h2>
+        <p class="hint" id="gsIntro" style="margin-bottom:12px"></p>
+        <div class="fix" id="gsStack"></div>
+        <p class="note" style="margin-top:12px">These are lawful alternative service providers and rails for trade between non-designated parties in non-prohibited goods. They do not make a deal lawful where a designated person is involved.</p>
+      </section>
+
+      <section class="pane" data-view="resolve" hidden>
+        <h2>Local legal framework in this corridor</h2>
+        <div class="fix" id="localLaw"></div>
+      </section>
+
+      <section class="pane">
+        <h2 id="dirHead">Partner network</h2>
+        <div class="dir" id="dir"></div>
+        <p class="hint" style="margin-top:10px">Every partner passes the same screening and signs a compliance undertaking before listing.</p>
+      </section>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const COUNTRIES=["India","UAE","Russia","Belarus","China","Hong Kong","Kazakhstan","Kyrgyzstan","Uzbekistan","Armenia","Georgia","Türkiye","Singapore","Saudi Arabia","United Kingdom","EU member state","United States","Other"];
+const DIVERSION=["UAE","China","Hong Kong","Kazakhstan","Kyrgyzstan","Uzbekistan","Armenia","Georgia","Türkiye"];
+const RAILS=[
+ ["lcs","INR–AED local currency settlement"],["usd","USD via correspondent bank"],["eur","EUR via correspondent bank"],
+ ["vostro","INR via Special Rupee Vostro Account"],["cips","CNY via CIPS"],["stable","Stablecoin via VARA-licensed provider"],["spfs","RUB via SPFS"]];
+const INS=["India","UAE","United Kingdom","EU member state","Other","None"];
+// Illustrative sample (NOT a live feed) — representative designated parties with common spellings.
+// Replace wholesale with the output of ingest_sanctions.py (screening.list.js) for the real build.
+const LIST=[
+ {n:"Sberbank",a:["PJSC Sberbank","Sberbank of Russia","Sberbank Rossii"],l:["UK","US"]},
+ {n:"VTB Bank",a:["Bank VTB PJSC","VTB"],l:["UK","EU","US"]},
+ {n:"Gazprombank",a:["GPB","Bank GPB"],l:["UK","EU"]},
+ {n:"Alfa-Bank",a:["AO Alfa-Bank","Alfa Bank","Alfabank","JSC Alfa-Bank"],l:["UK","EU","US"]},
+ {n:"Promsvyazbank",a:["PSB","Promsvyazbank PJSC"],l:["UK","EU","US"]},
+ {n:"Sovcombank",a:["PJSC Sovcombank"],l:["UK","EU","US"]},
+ {n:"Otkritie",a:["Bank Otkritie","FC Otkritie"],l:["UK","EU","US"]},
+ {n:"Novikombank",a:["AKB Novikombank"],l:["UK","EU","US"]},
+ {n:"Bank Rossiya",a:["Rossiya Bank","AB Rossiya"],l:["UK","EU","US"]},
+ {n:"VEB.RF",a:["Vnesheconombank","VEB"],l:["UK","EU","US"]},
+ {n:"Rosneft",a:["Rosneft Oil Company","NK Rosneft"],l:["UK","US"]},
+ {n:"Gazprom Neft",a:["PJSC Gazprom Neft","Gazpromneft"],l:["UK","US"]},
+ {n:"Lukoil",a:["PJSC Lukoil","Lukoil Oil Company"],l:["UK","US"]},
+ {n:"Surgutneftegas",a:["PJSC Surgutneftegas","Surgutneftegaz"],l:["UK","US"]},
+ {n:"Transneft",a:["PJSC Transneft"],l:["UK","EU","US"]},
+ {n:"Novatek",a:["PAO Novatek"],l:["UK","US"]},
+ {n:"Rostec",a:["Rostec State Corporation","Russian Technologies"],l:["UK","EU","US"]},
+ {n:"Almaz-Antey",a:["Almaz Antey Concern"],l:["UK","EU","US"]},
+ {n:"United Aircraft Corporation",a:["UAC","OAK"],l:["UK","EU","US"]},
+ {n:"Kalashnikov Concern",a:["Kalashnikov"],l:["UK","EU","US"]},
+ {n:"Uralvagonzavod",a:["UVZ"],l:["UK","EU","US"]},
+ {n:"Sovcomflot",a:["PAO Sovcomflot","SCF Group","Sovkomflot"],l:["UK","EU","US"]},
+ {n:"Vladimir Putin",a:["Vladimir Vladimirovich Putin","V. Putin","Putin"],l:["UK","EU","US"]},
+ {n:"Sergei Lavrov",a:["Sergey Lavrov","Lavrov"],l:["UK","EU","US"]},
+ {n:"Dmitry Medvedev",a:["Dmitri Medvedev","Medvedev"],l:["UK","EU"]},
+ {n:"Oleg Deripaska",a:["Deripaska"],l:["UK","EU","US"]},
+ {n:"Alisher Usmanov",a:["Usmanov"],l:["UK","EU","US"]},
+ {n:"Roman Abramovich",a:["Abramovich"],l:["UK","EU"]},
+ {n:"Gennady Timchenko",a:["Timchenko"],l:["UK","EU","US"]},
+ {n:"Igor Sechin",a:["Sechin"],l:["UK","EU","US"]},
+ {n:"Andrey Kostin",a:["Kostin"],l:["UK","EU","US"]},
+ {n:"Suleiman Kerimov",a:["Kerimov"],l:["UK","EU","US"]},
+ {n:"Mikhail Fridman",a:["Fridman","Friedman"],l:["UK","EU"]},
+ {n:"Petr Aven",a:["Pyotr Aven","Aven"],l:["UK","EU"]},
+ {n:"Nikolai Patrushev",a:["Patrushev"],l:["UK","EU","US"]},
+ {n:"Korea Mining Development Trading Corporation",a:["KOMID"],l:["UN","US"],un:true},
+ {n:"Islamic State in Iraq and the Levant",a:["ISIL","ISIS","Daesh","Da'esh"],l:["UN","US","UK","EU"],un:true}
+];
+const CHPL=["8541","8542","8517","8526","8532","8533","8536","8504","8548","8471","8473","8486","8534","8457","8458","8459","8460","8461","8466","8479","8807","9013","9014","8525","8529"];
+let sh=[{name:"Rashid Al Mansoori",pct:45},{name:"Vostok Trade FZE",pct:30},{name:"Meera Holdings Ltd",pct:25}];
+
+let sampleFn=null,state=null,stFromClaude=false;
+
+const EXAMPLES=[
+ ["Export: India → UAE","Kaveri Components in India is exporting USD 420,000 of microcontroller chips (HS 854231) to Al Safa Electronics Trading in the UAE, onward to Steppe Industrial Supply in Kazakhstan, settled in dirhams. Al Safa is 30% owned by Vostok Trade FZE."],
+ ["Inbound fee from Russia","Our client, an Indian engineering consultancy, is receiving a USD 150,000 fee from Ural Metals OOO, a Russian company, paid via Alfabank and settled in rupees through a vostro account."],
+ ["Russian UHNWI investing in India","A Russian-national UHNWI resident in the UAE, Mr A. Petrov, wants to invest USD 5,000,000 for equity in an Indian logistics company. Petrov owns 100% of the investing vehicle."],
+ ["A blocked case","An Indian firm is buying USD 1,000,000 of goods from a UAE company that is 51% owned by Vladimir Putin, paid in USD through a correspondent bank."]
+];
+
+// country detection
+const CMAP=[[/\bindia|indian\b/i,"India"],[/\buae\b|emirates|dubai|abu dhabi/i,"UAE"],[/russia|russian/i,"Russia"],[/belarus/i,"Belarus"],[/\bchina|chinese\b/i,"China"],[/hong ?kong/i,"Hong Kong"],[/kazakh/i,"Kazakhstan"],[/uzbek/i,"Uzbekistan"],[/\buk\b|united kingdom|britain|british|england/i,"United Kingdom"],[/european union|\beu\b|germany|german|france|french|netherlands|dutch|italy/i,"EU member state"],[/\bus\b|u\.s\.|united states|america|american/i,"United States"],[/singapore/i,"Singapore"],[/t[\u00fcu]rkiye|turkey|turkish/i,"T\u00fcrkiye"],[/saudi/i,"Saudi Arabia"]];
+
+function scanNames(text){
+  const tokens=new Set(norm(text).split(" ").filter(Boolean));
+  const out=[];
+  LIST.forEach(e=>{for(const nm of [e.n,...e.a]){const ct=norm(nm).split(" ").filter(Boolean);if(ct.length&&ct.every(t=>tokens.has(t))){out.push(e.n);break}}});
+  return out;
+}
+
+function parsePrompt(text){
+  const t=text,low=text.toLowerCase();
+  const st={origin:"",dest:"",onward:"",exporter:"",buyer:"",enduser:"",hs:"",goods:"",value:0,rail:"",bankA:"",bankB:"",carrier:"",ins:"None",type:"trade",purpose:"",sh:[],extraNames:[]};
+  if(/invest|equity|shares?\b|stake|acquir|\bfdi\b|fund\b/i.test(t))st.type="invest";
+  else if(/receiv|incoming|inbound|\bfee\b|remit|into india|credit to|pay(ment)? (from|into|to our)/i.test(t))st.type="inbound";
+  else st.type="trade";
+  const m=t.match(/(?:usd|us\$|\$|eur|€|aed|inr|rs\.?|₹)\s?([\d,]+(?:\.\d+)?)\s?(k|m|mn|million|bn|billion)?/i)||t.match(/\b([\d,]+(?:\.\d+)?)\s?(k|m|mn|million|bn|billion)\b/i);
+  if(m){let n=parseFloat(m[1].replace(/,/g,""))||0;const u=(m[2]||"").toLowerCase();if(u==="k")n*=1e3;else if(/^m/.test(u))n*=1e6;else if(/^b/.test(u))n*=1e9;st.value=n}
+  if(/dirham|aed|rupee|inr|local currency|vostro|lcs/i.test(t))st.rail=(/receiv|inbound|vostro/i.test(t)&&/rupee|inr|vostro/i.test(t))?"vostro":"lcs";
+  else if(/usd|dollar|correspondent/i.test(t))st.rail="usd";
+  else if(/eur|euro/i.test(t))st.rail="eur";
+  else if(/cips|yuan|renminbi|rmb|cny/i.test(t))st.rail="cips";
+  else if(/stablecoin|usdt|tether|crypto/i.test(t))st.rail="stable";
+  else if(/spfs/i.test(t))st.rail="spfs";
+  if(/uk insurer|british insurer|lloyd/i.test(t))st.ins="United Kingdom";
+  else if(/eu insurer|european insurer/i.test(t))st.ins="EU member state";
+  const found=[];CMAP.forEach(([re,c])=>{if(re.test(t)&&!found.includes(c))found.push(c)});
+  if(found[0])st.origin=found[0];if(found[1])st.dest=found[1];if(found[2])st.onward=found[2];
+  const hs=t.match(/\bhs\s?(?:code)?\s?:?\s?(\d{4,8})/i);if(hs)st.hs=hs[1];
+  if(st.type==="trade"){const g=t.match(/(?:exporting|selling|supply(?:ing)?|shipping)\s+[^,.]*?\bof\b\s+([^,.(]+)/i);if(g)st.goods=g[1].trim()}
+  const sh=[];
+  t.replace(/(\d{1,3})\s*%\s*(?:owned|held)\s*by\s+([A-Z][\w.&'\u2019\- ]{2,40}?)(?=[,.;]| who| which| and | in | that|$)/g,(x,p,n)=>{sh.push({name:n.trim(),pct:+p});return x});
+  t.replace(/\b([A-Z][\w.&'\u2019\- ]{2,40}?)\s+owns?\s+(?:a\s+)?(\d{1,3})\s*%/g,(x,n,p)=>{sh.push({name:n.trim(),pct:+p});return x});
+  st.sh=sh;
+  return st;
+}
+
+async function extractWithClaude(text){
+  const schema='Return ONLY a JSON object, no prose, with keys: type ("trade" if the client sells/exports goods, "inbound" if the client receives a payment, "invest" if someone invests into the client); client (your side); counterparty (the payer, buyer or investor on the other side); thirdParty; clientCountry; counterpartyCountry; onwardCountry; goods; hsCode; valueUsd (number); rail (one of lcs, vostro, usd, eur, cips, stable, spfs, or ""); clientBank; counterpartyBank; carrier; insurerJurisdiction (India, UAE, United Kingdom, EU member state, United States, Other or None); owners (array of {name, percent}); purpose. Map dirham/AED or rupee/INR to lcs, or vostro for a rupee receipt; dollar/USD to usd; euro to eur; yuan/CIPS to cips; stablecoin/USDT to stable; SPFS to spfs. Use "" or [] when unknown.';
+  const r=await sampleFn.json(schema+"\n\nTEXT:\n"+text,{modelTier:"quick"});
+  const C=["trade","inbound","invest"];
+  return {origin:r.clientCountry||"",dest:r.counterpartyCountry||"",onward:r.onwardCountry||"",exporter:r.client||"",buyer:r.counterparty||"",enduser:r.thirdParty||"",hs:String(r.hsCode||"").replace(/\D/g,""),goods:r.goods||"",value:+r.valueUsd||0,rail:r.rail||"",bankA:r.clientBank||"",bankB:r.counterpartyBank||"",carrier:r.carrier||"",ins:r.insurerJurisdiction||"None",type:C.includes(r.type)?r.type:"trade",purpose:r.purpose||"",sh:(r.owners||[]).filter(o=>o&&o.name).map(o=>({name:o.name,pct:+o.percent||0})),extraNames:[]};
+}
+
+function renderParsed(st){
+  const typeLabel={trade:"Outbound trade",inbound:"Inbound payment",invest:"Inward investment"}[st.type]||st.type;
+  const roleB={trade:"Buyer",inbound:"Payer",invest:"Investor"}[st.type]||"Counterparty";
+  const bits=[["Type",typeLabel]];
+  if(st.exporter)bits.push(["Client",st.exporter]);
+  if(st.buyer)bits.push([roleB,st.buyer]);
+  const geo=[st.origin,st.dest,st.onward].filter((v,i,a)=>v&&v!=="Other"&&a.indexOf(v)===i).join(" \u2192 ");
+  if(geo)bits.push(["Route",geo]);
+  if(st.rail)bits.push(["Rail",railName(st.rail)]);
+  if(st.value)bits.push(["Amount","USD "+st.value.toLocaleString("en-GB")]);
+  const banks=[st.bankA,st.bankB].filter(Boolean);if(banks.length)bits.push(["Banks",banks.join(", ")]);
+  if(st.sh&&st.sh.length)bits.push(["Owners",st.sh.map(x=>x.name+" "+(x.pct||0)+"%").join(", ")]);
+  if(st.extraNames&&st.extraNames.length)bits.push(["Also screened",st.extraNames.join(", ")]);
+  $("parsed").innerHTML="<b>Understood as</b> \u2014 "+bits.map(b=>"<b>"+esc(b[0])+":</b> "+esc(b[1])).join(" &nbsp;\u00b7&nbsp; ");
+}
+
+async function analysePrompt(){
+  const text=$("prompt").value.trim();
+  if(!text){$("parseStatus").textContent="Type a scenario first.";return}
+  $("goBtn").disabled=true;$("parseStatus").textContent=sampleFn?"Reading with Claude\u2026":"Reading\u2026";
+  let st=null;stFromClaude=false;
+  if(sampleFn){try{st=await extractWithClaude(text);stFromClaude=true}catch(e){st=null}}
+  if(!st)st=parsePrompt(text);
+  const scanned=scanNames(text);
+  const known=[st.exporter,st.buyer,st.enduser,st.bankA,st.bankB,st.carrier].concat((st.sh||[]).map(x=>x.name)).map(x=>norm(x));
+  st.extraNames=[...new Set([...(st.extraNames||[]),...scanned])].filter(n=>!known.includes(norm(n)));
+  st.cpLabel={trade:"buyer",inbound:"payer",invest:"investor"}[st.type]||"counterparty";
+  state=st;aiActive=false;$("memoStatus").textContent="Standard memo generated from the rules. Use Claude to draft a fuller analysis.";
+  renderParsed(st);run();
+  $("parseStatus").textContent=stFromClaude?"Parsed by Claude \u2014 edit the prompt and re-run to change.":(sampleFn?"Parsed locally.":"Parsed locally \u2014 allow Claude for richer reading.");
+  $("goBtn").disabled=false;
+}
+
+// ---------- fuzzy screening ----------
+const STOP=/\b(pjsc|pao|oao|ojsc|jsc|zao|llc|llp|ltd|limited|plc|fze|fzco|inc|company|co|group|the|of|pvt|private)\b/g;
+const norm=s=>(s||"").toLowerCase().normalize("NFKD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9 ]/g," ").replace(STOP," ").replace(/\s+/g," ").trim();
+function lev(a,b){const m=a.length,n=b.length;if(!m)return n;if(!n)return m;let p=Array.from({length:n+1},(_,j)=>j);for(let i=1;i<=m;i++){const c=[i];for(let j=1;j<=n;j++)c[j]=Math.min(p[j]+1,c[j-1]+1,p[j-1]+(a[i-1]===b[j-1]?0:1));p=c}return p[n]}
+const sim=(a,b)=>{if(!a||!b)return 0;const d=lev(a,b);return 1-d/Math.max(a.length,b.length)};
+function screen(name){
+  const q=norm(name);if(!q)return null;
+  let best={score:0,e:null};
+  for(const e of LIST){for(const cand of [e.n,...e.a]){const c=norm(cand);if(!c)continue;
+    let s=sim(q,c);
+    const qt=q.split(" "),ct=c.split(" ");
+    if(ct.every(t=>qt.includes(t)))s=Math.max(s,.95);
+    for(const t of qt){if(t.length>4)s=Math.max(s,sim(t,c)*.97)}
+    if(s>best.score)best={score:s,e}}}
+  if(best.score>=.9)return{status:"hit",...best};
+  if(best.score>=.78)return{status:"possible",...best};
+  return{status:"clear",...best};
+}
+
+// ---------- analysis ----------
+function analyse(){
+  const d=Object.assign({origin:"",dest:"",onward:"",exporter:"",buyer:"",enduser:"",hs:"",goods:"",value:0,rail:"",bankA:"",bankB:"",carrier:"",ins:"None",type:"trade",purpose:"",cpLabel:"counterparty",sh:[],extraNames:[]},state||{});
+  const roleA={trade:"Exporter",inbound:"Recipient",invest:"Investee"}[d.type]||"Client";
+  const roleB={trade:"Buyer",inbound:"Payer",invest:"Investor"}[d.type]||"Counterparty";
+  const roleBank={trade:"Buyer's bank",inbound:"Remitting bank",invest:"Investor's bank"}[d.type]||"Counterparty bank";
+  const cpTitle=d.cpLabel.charAt(0).toUpperCase()+d.cpLabel.slice(1);
+  const parties=[];
+  if(d.exporter)parties.push([d.exporter,roleA]);
+  if(d.buyer)parties.push([d.buyer,roleB]);
+  if(d.enduser)parties.push([d.enduser,"Third party"]);
+  if(d.bankA)parties.push([d.bankA,"Client's bank"]);
+  if(d.bankB)parties.push([d.bankB,roleBank]);
+  if(d.carrier)parties.push([d.carrier,"Carrier / vessel"]);
+  (d.extraNames||[]).forEach(n=>parties.push([n,"Named party"]));
+  sh=(d.sh||[]);
+  sh.forEach(s=>parties.push([s.name,cpTitle+" owner "+(s.pct||0)+"%"]));
+  const parties2=parties.filter(p=>p[0]);
+  const results=parties2.map(([name,role])=>({name,role,r:screen(name)}));
+  const shRes=sh.filter(s=>s.name).map(s=>({...s,r:screen(s.name)}));
+  const listedSh=shRes.filter(s=>s.r&&s.r.status==="hit");
+  const possSh=shRes.filter(s=>s.r&&s.r.status==="possible");
+  const aggregate=listedSh.reduce((t,s)=>t+(+s.pct||0),0);
+  const maxSingle=listedSh.reduce((m,s)=>Math.max(m,+s.pct||0),0);
+  const totalPct=sh.reduce((t,s)=>t+(+s.pct||0),0);
+  const chpl=d.hs.length>=4&&CHPL.includes(d.hs.slice(0,4));
+  const oil=d.hs.startsWith("2709")||d.hs.startsWith("2710");
+  const russiaTouch=[d.origin,d.dest,d.onward].some(c=>c==="Russia"||c==="Belarus");
+  const diversion=[d.dest,d.onward].some(c=>DIVERSION.includes(c));
+
+  // which prohibition regimes actually bind a party or provider in THIS stack
+  const BANKJUR={hsbc:"UK",barclays:"UK","standard chartered":"UK",natwest:"UK",lloyds:"UK",deutsche:"EU",bnp:"EU","societe generale":"EU","société générale":"EU",unicredit:"EU",ing:"EU",santander:"EU",citi:"US",citibank:"US",jpmorgan:"US","jp morgan":"US","bank of america":"US","wells fargo":"US"};
+  const jur=n=>{n=(n||"").toLowerCase();for(const k in BANKJUR)if(n.includes(k))return BANKJUR[k];return null};
+  const bind=new Set();
+  [d.origin,d.dest,d.onward].forEach(c=>{if(c==="United States")bind.add("US");if(c==="United Kingdom")bind.add("UK");if(c==="EU member state")bind.add("EU")});
+  if(d.rail==="usd")bind.add("US"); if(d.rail==="eur")bind.add("EU");
+  if(d.ins==="United Kingdom")bind.add("UK"); if(d.ins==="EU member state")bind.add("EU"); if(d.ins==="United States")bind.add("US");
+  [jur(d.bankA),jur(d.bankB)].forEach(j=>{if(j)bind.add(j)});
+  const bindingFor=e=>{const r=(e.l||[]).filter(x=>bind.has(x));if(e.un)r.push("UN");return r};
+  results.forEach(r=>{r.bindRegs=r.r.status==="hit"?bindingFor(r.r.e):[];r.binding=r.bindRegs.length>0});
+  const ownBinding=listedSh.some(s=>bindingFor(s.r.e).length>0);
+  const westSvc=bind.has("UK")||bind.has("EU")||bind.has("US");
+
+  // flags carry a 4th field: "P" prohibition (binding law) | "R" enforcement/commercial risk | "N" neutral
+  const flags=[];let score=0;
+  const hits=results.filter(x=>x.r&&x.r.status==="hit"), poss=results.filter(x=>x.r&&x.r.status==="possible");
+  hits.forEach(h=>{
+    if(h.binding){score+=60;flags.push(["crit","Prohibited party",`${h.name} (${h.role}) matches ${h.r.e.n}, designated under ${h.bindRegs.join(", ")} — a regime that binds a party or provider in this stack. Dealing is prohibited; a licence is required.`,"P"]);}
+    else {score+=35;flags.push(["warn","Secondary-sanctions exposure",`${h.name} (${h.role}) matches ${h.r.e.n} (designated by ${h.r.e.l.join(", ")}). Those regimes do not bind this stack, so it is not prohibited under Indian or UAE law — but dealing exposes banks to US secondary sanctions (EO 14114) and most will refuse.`,"R"]);}
+  });
+  poss.forEach(h=>{score+=15;flags.push(["warn","Possible match",`${h.name} (${h.role}) resembles ${h.r.e.n}. Resolve on identifiers (registration number, address, date of incorporation) before proceeding.`,"R"]);});
+  if(aggregate>=50){
+    if(ownBinding){score+=40;flags.push(["crit","Prohibited ownership",`Designated persons (under a binding regime) hold ${aggregate}% of the ${d.cpLabel}, which is blocked under the 50% rule. Prohibited.`,"P"]);}
+    else{score+=30;flags.push(["warn","Ownership — secondary risk",`Designated persons hold ${aggregate}% of the ${d.cpLabel}, but only under regimes that do not bind this stack. Not prohibited under Indian/UAE domestic law; heavy secondary-sanctions and bank-refusal risk.`,"R"]);}
+  } else if(aggregate>0){score+=12;flags.push(["warn","Minority ownership",`Designated persons hold ${aggregate}% of the ${d.cpLabel}. Assess control (board, veto, de facto influence).`,"R"]);}
+  if((d.buyer||shRes.length)&&totalPct<100){score+=10;flags.push(["warn","Ownership gap",(shRes.length?`Only ${totalPct}% of the ${d.cpLabel}'s ownership is identified.`:`No ownership information for the ${d.cpLabel}${d.buyer?" ("+d.buyer+")":""} yet.`)+" Obtain the register and a UBO declaration.","R"]);}
+  if(russiaTouch){
+    if(westSvc){score+=35;flags.push(["crit","Russia prohibitions apply",`A ${[...bind].filter(x=>["US","EU","UK"].includes(x)).join("/")} nexus is in the stack, bringing broad Russia goods, services and financing prohibitions into play for that party or provider.`,"P"]);}
+    else{score+=15;flags.push(["info","Russia-related trade","Trade touches Russia or Belarus. Between non-designated parties in non-prohibited goods, this is lawful under Indian and UAE law. Keep the stack clean: no USD/EUR leg, no UK/EU/US bank, insurer, broker or counsel, no Western-origin controlled goods.","R"]);}
+  }
+  if(chpl&&(russiaTouch||diversion)){score+=25;flags.push(["warn","Export-control risk (not a sanction)",`HS ${d.hs.slice(0,4)} is on the Common High Priority List and the route passes ${[d.dest,d.onward].filter(c=>DIVERSION.includes(c)).join(", ")}. US/EU export controls (incl. the EAR foreign direct product rule) follow US-origin or US-technology goods regardless of currency, carrier or nationality — an enforcement-reach risk, not a prohibition binding a UAE entity. In India, DGFT SCOMET is a binding domestic control: check it. Obtain an end-user certificate and a no-re-export clause.`,"R"]);}
+  else if(chpl){score+=5;flags.push(["info","Controlled goods",`HS ${d.hs.slice(0,4)} is on the Common High Priority List. Keep end-use documentation on file.`,"R"]);}
+  if(oil&&russiaTouch){
+    if(westSvc||["United Kingdom","EU member state","United States"].includes(d.ins)){score+=30;flags.push(["crit","Oil price cap applies","A UK/EU/G7 service provider (insurer, bank) is in the stack, so price-cap attestations are mandatory and dealing above the cap is prohibited.","P"]);}
+    else{score+=15;flags.push(["warn","Oil price cap — risk","Russian-origin oil. No G7 service provider is in the stack, so the cap does not bind here; it is triggered the moment any G7 insurer, financier or shipper is used.","R"]);}
+  }
+  if(d.rail==="spfs"){
+    if(bind.has("EU")){score+=30;flags.push(["crit","SPFS — EU bar","An EU nexus is present and EU persons are barred from SPFS connectivity. Prohibited for that provider.","P"]);}
+    else{score+=20;flags.push(["warn","SPFS — risk","SPFS carries US secondary-sanctions risk and most banks refuse it. Not a prohibition binding a UAE entity.","R"]);}
+  }
+  if(d.rail==="usd"){score+=5;flags.push(["info","USD leg creates a US nexus","USD clearing routes through a US correspondent bank, bringing US law onto the payment. Switch to INR–AED or CNY to keep the stack clean.","R"]);}
+  if(d.rail==="stable"){score+=10;flags.push(["warn","Stablecoin settlement","Confirm the provider is VARA- or ADGM-licensed, applies the Travel Rule, and that the issuer's freeze policy is understood (USD stablecoin issuers are typically US-regulated).","R"]);}
+  if(d.rail==="lcs"){flags.push(["ok","Local currency settlement","INR–AED local currency settlement avoids a USD leg, so no US nexus arises from the currency.","N"]);}
+  if(d.type==="trade"&&!d.enduser){score+=10;flags.push(["warn","End user unknown","Obtain an end-user statement before shipment and screen the end user.","R"]);}
+  if(d.type==="inbound"){
+    score+=8;flags.push(["info","Inbound receipt","India permits rupee trade settlement through Special Rupee Vostro Accounts (RBI, 2022). Receiving funds from a non-designated payer for a lawful underlying transaction is not prohibited. The AD bank will require the purpose code and documentary proof of the underlying trade or service.","R"]);
+    flags.push(["warn","Source of funds",`Establish and document the source of funds and that the payer (${d.buyer||"the remitter"}) and its owners are not designated. FEMA and PMLA reporting apply to the receiving bank.`,"R"]);
+  }
+  if(d.type==="invest"){
+    score+=8;flags.push(["info","Inward FDI","Russia does not share a land border with India, so the Press Note 3 (2020) prior-approval requirement does not apply; most sectors are open on the automatic route under the FEMA FDI rules. Check the sector cap (defence, telecom, media, etc.).","R"]);
+    flags.push(["warn","Source of wealth",`Establish source of wealth and confirm the investor (${d.buyer||"the investor"}) and all ultimate beneficial owners are not designated. A Russian-national investor, even UAE-resident and undesignated, should expect enhanced scrutiny from the investee's bank and advisers.`,"R"]);
+  }
+  if(!flags.some(f=>f[0]==="crit"||f[0]==="warn"))flags.unshift(["ok","Screening","No prohibitions and no structural red flags on the information given.","N"]);
+  const prohibited=flags.some(f=>f[3]==="P"&&f[0]==="crit");
+  score=Math.min(100,score);
+  const level=score>=60?"high":score>=20?"med":"low";
+
+  // exposure
+  const ex=[];
+  const usN=[],ukN=[],euN=[];
+  if(d.rail==="usd")usN.push("USD clearing");
+  if(d.rail==="stable")usN.push("possible US-issued stablecoin");
+  if([d.origin,d.dest,d.onward].includes("United States"))usN.push("US jurisdiction in route");
+  if(chpl)usN.push("US-origin content possible in HS "+d.hs.slice(0,4)+" (check EAR de minimis and foreign direct product rules)");
+  if(hits.length||aggregate>0)usN.push("secondary sanctions exposure for non-US banks dealing with designated persons");
+  if(d.ins==="United Kingdom")ukN.push("UK insurer");
+  if([d.origin,d.dest,d.onward].includes("United Kingdom"))ukN.push("UK in route");
+  if(d.rail==="eur")euN.push("EUR clearing");
+  if(d.ins==="EU member state")euN.push("EU insurer");
+  if([d.origin,d.dest,d.onward].includes("EU member state"))euN.push("EU in route");
+  const nx=(arr,ind)=>arr.length?["Applies","p-crit"]:ind?["Indirect","p-warn"]:["No direct nexus","p-ok"];
+  ex.push(["United States",...nx(usN,diversion),usN.length?usN.join("; "):diversion?"Banks in the corridor apply US standards to keep correspondent access.":"No US person, currency or goods identified."]);
+  ex.push(["United Kingdom",...nx(ukN,true),ukN.length?ukN.join("; "):"No UK person involved, but UK banks, insurers and counsel used by any party will apply UK rules."]);
+  ex.push(["European Union",...nx(euN,diversion),euN.length?euN.join("; "):"No EU person or EUR leg. EU 'no Russia' clauses may apply via EU-origin goods."]);
+  ex.push(["United Nations",...(russiaTouch?["Check","p-warn"]:["Low","p-ok"]),"UN regimes apply through national law in every corridor state; no Russia-wide UN regime."]);
+  const local=[...new Set([d.origin,d.dest,d.onward])].filter(c=>["India","UAE","China","Hong Kong","Kazakhstan","Singapore","Türkiye","Saudi Arabia"].includes(c));
+  local.forEach(c=>ex.push([c,"Applies","p-n",c==="UAE"?"UAE targeted financial sanctions (UN and Local Terrorist List); CBUAE AML rules on banks.":c==="India"?"FEMA, RBI LCS framework, DGFT export rules; UN sanctions via UAPA orders.":"Local export control, AML and UN implementation."]));
+
+  return{d,results,shRes,listedSh,possSh,aggregate,maxSingle,totalPct,flags,score,level,ex,chpl,diversion,russiaTouch,prohibited,ownBinding,binding:[...bind],westSvc};
+}
+
+// ---------- render ----------
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let last=null;
+function run(){
+  const A=analyse();last=A;
+  const anyDes=A.results.some(r=>r.r&&r.r.status==="hit")||A.aggregate>0;
+  const legal=A.prohibited?["p-crit","Prohibited under binding law","A party or provider in this stack is bound by a regime under which this deal is prohibited. Exit or licence."]
+    :anyDes?["p-warn","Not prohibited under this stack's binding law","No prohibition binds these parties under Indian or UAE law; the exposure is secondary-sanctions and enforcement risk — see the flags."]
+    :["p-ok","No prohibition identified","No binding prohibition on the information given."];
+  const rk={low:["p-ok","Low"],med:["p-warn","Elevated"],high:["p-crit","High"]}[A.level];
+  $("ratingLabel").innerHTML=`<span class="pill ${legal[0]}" style="font-size:13px;padding:4px 12px">${legal[1]}</span>`;
+  $("hitCount").className="pill "+rk[0];$("hitCount").textContent=rk[1]+" enforcement & commercial risk";
+  const nh=A.results.filter(r=>r.r&&r.r.status!=="clear").length;
+  const hasCp=!!(A.d.buyer)||(A.d.extraNames&&A.d.extraNames.length);
+  $("ratingSub").textContent=legal[2]+" · "+A.results.length+" names screened, "+nh+" match"+(nh===1?"":"es")+(hasCp?"":" · Name who is on the other side (and where they are) to screen them; see Show resolve for the lawful how-to.");
+  const pc={crit:"p-crit",warn:"p-warn",ok:"p-ok",info:"p-n"};
+  $("flags").innerHTML=A.flags.map(f=>`<li><span class="pill ${pc[f[0]]}">${esc(f[1])}</span><span>${esc(f[2])}</span></li>`).join("");
+  $("screen").innerHTML=A.results.map(x=>{
+    const s=x.r.status;const pill=s==="hit"?'<span class="pill p-crit">Match</span>':s==="possible"?'<span class="pill p-warn">Possible</span>':'<span class="pill p-ok">Clear</span>';
+    return `<tr><td>${esc(x.name)}</td><td>${esc(x.role)}</td><td>${pill}${s!=="clear"?`<div class="hint">${esc(x.r.e.n)} · ${Math.round(x.r.score*100)}%</div>`:""}</td><td>${s!=="clear"?esc(x.r.e.l.join(", ")):"–"}</td></tr>`}).join("");
+  const agg=A.aggregate;
+  $("own").innerHTML=`
+   <div class="tbl"><table><thead><tr><th>Shareholder</th><th style="text-align:right">Held</th><th>Status</th></tr></thead><tbody>
+   ${A.shRes.map(s=>`<tr><td>${esc(s.name)}</td><td class="num">${s.pct||0}%</td><td>${s.r.status==="hit"?'<span class="pill p-crit">Designated</span>':s.r.status==="possible"?'<span class="pill p-warn">Check</span>':'<span class="pill p-ok">Clear</span>'}</td></tr>`).join("")}
+   <tr><td><b>Identified total</b></td><td class="num"><b>${A.totalPct}%</b></td><td>${A.totalPct<100?'<span class="pill p-warn">Gap</span>':""}</td></tr></tbody></table></div>
+   <div style="margin-top:14px;display:grid;gap:10px">
+     <div><div class="summary"><span>US test: aggregate designated ownership</span><b class="mono">${agg}%</b></div><div class="bar" aria-hidden="true"><span style="width:${Math.min(100,agg)}%"></span><i></i></div></div>
+     <div><div class="summary"><span>UK / EU test: largest single designated holding</span><b class="mono">${A.maxSingle}%</b></div><div class="bar" aria-hidden="true"><span style="width:${Math.min(100,A.maxSingle)}%"></span><i></i></div></div>
+     <p class="hint">Line marks the 50% threshold. The US aggregates holdings of all blocked persons. The UK and EU look to ownership by a designated person (including joint holdings) and separately to control, so a holding below 50% can still leave the buyer controlled.</p>
+   </div>`;
+  $("exposure").innerHTML=A.ex.map(e=>`<tr><td><b>${esc(e[0])}</b></td><td><span class="pill ${e[2]}">${esc(e[1])}</span></td><td>${esc(e[3])}</td></tr>`).join("");
+  if(!aiActive){memoMd=baseMemo(A);renderMemo(memoMd)}
+  $("counselText").value=counselNote(A);
+  renderResolve(A);
+  renderGS(A);
+}
+
+function railName(r){return (RAILS.find(x=>x[0]===r)||["",r])[1]}
+function anyDesM(A){return A.results.some(r=>r.r.status==="hit")||A.aggregate>0}
+function words(A){return{legal:A.prohibited?"prohibited under binding law":anyDesM(A)?"not prohibited under this stack":"no prohibition identified",risk:({low:"low",med:"elevated",high:"high"}[A.level])+" enforcement & commercial risk"}}
+function baseMemo(A){
+  const d=A.d;const today=new Date().toLocaleDateString("en-GB",{day:"numeric",month:"long",year:"numeric"});
+  const rec=A.prohibited?"Do not proceed as structured. Exit, obtain a licence, or remove the binding nexus and change counterparty.":(A.level==="high"||anyDesM(A))?"Proceed only once the flagged items are resolved and the residual secondary-sanctions risk is accepted and documented.":"Proceed, retaining this memo and the supporting documents on file.";
+  const w=words(A);
+  return `@head|Prepared ${today}|Matter ${d.exporter} → ${d.buyer}|Route ${d.origin} → ${d.dest}${d.onward&&d.onward!==d.dest&&d.onward!=="Other"?" → "+d.onward:""}|Legal ${w.legal}|Risk ${w.risk}
+## Transaction
+${d.type==="inbound"?`${d.exporter||"The client"} (${d.origin||"India"}) proposes to receive about USD ${d.value.toLocaleString("en-GB")} from ${d.buyer||"the payer"} (${d.dest})${d.purpose?`, as ${d.purpose}`:""}.`:d.type==="invest"?`${d.buyer||"The investor"} (${d.dest}) proposes to invest about USD ${d.value.toLocaleString("en-GB")} into ${d.exporter||"the Indian target"} (${d.origin||"India"})${d.purpose?` (${d.purpose})`:""}.`:`${d.exporter||"The exporter"} (${d.origin}) proposes to sell ${d.goods||"goods"} (HS ${d.hs||"not given"}), worth about USD ${d.value.toLocaleString("en-GB")}, to ${d.buyer} (${d.dest})${d.enduser?`, for onward supply to ${d.enduser} (${d.onward})`:""}.`} Settlement is by ${railName(d.rail)} through ${d.bankA||"an unnamed bank"} and ${d.bankB||"an unnamed bank"}.
+## Screening
+${A.results.length} names were screened. ${A.results.filter(r=>r.r.status==="hit").map(r=>`${r.name} matches ${r.r.e.n} (${r.r.e.l.join(", ")}).`).join(" ")||"No confirmed matches."} ${A.results.filter(r=>r.r.status==="possible").map(r=>`${r.name} is a possible match for ${r.r.e.n} and needs resolving.`).join(" ")}
+## Ownership and control
+Identified ownership totals ${A.totalPct}%. Designated persons hold ${A.aggregate}% in aggregate and ${A.maxSingle}% as the largest single holding. ${A.aggregate>=50?"The buyer is likely owned by designated persons and should be treated as blocked.":"The ownership tests are not met on this information, but control (board, veto and contractual rights) should be confirmed."}
+## Regulatory exposure
+${A.ex.filter(e=>e[1]==="Applies").map(e=>`- ${e[0]}: ${e[3]}`).join("\n")||"- No Western regime applies directly."}
+${A.ex.filter(e=>e[1]==="Indirect").map(e=>`- ${e[0]} (indirect): ${e[3]}`).join("\n")}
+## Red flags
+${A.flags.filter(f=>f[0]!=="ok").map(f=>`- ${f[1]}: ${f[2]}`).join("\n")||"- None identified."}
+## Recommendation
+${rec}
+## Documents to obtain
+- Buyer's certificate of incorporation, shareholder register and UBO declaration
+- End-user statement with a no-re-export-to-Russia or Belarus undertaking
+- Commercial invoice, packing list and bill of lading
+- Bank confirmation that the settlement route is supported`;
+}
+function counselNote(A){
+  return `Counsel review requested\n\nMatter: ${A.d.exporter} → ${A.d.buyer}\nGoods: ${A.d.goods} (HS ${A.d.hs}), USD ${A.d.value.toLocaleString("en-GB")}\nCorridor: ${A.d.origin} → ${A.d.dest} → ${A.d.onward}\nRail: ${railName(A.d.rail)}\nLegal status: ${words(A).legal}\nRisk: ${words(A).risk}\n\nFlags:\n${A.flags.filter(f=>f[0]!=="ok").map(f=>"• "+f[1]+": "+f[2]).join("\n")||"• None"}\n\nQuestion for counsel: please confirm whether the transaction may proceed and on what conditions.`;
+}
+function renderMemo(md,el){
+  const out=[];let inList=false;
+  const inline=s=>esc(s).replace(/\*\*(.+?)\*\*/g,"<b>$1</b>");
+  md.split("\n").forEach(line=>{
+    const t=line.trim();
+    if(t.startsWith("@head|")){const p=t.slice(6).split("|");out.push('<div class="head">'+p.map(x=>{const i=x.indexOf(" ");return `<span>${esc(x.slice(0,i))}</span><b>${esc(x.slice(i+1))}</b>`}).join("")+"</div>");return}
+    if(/^#{1,4}\s/.test(t)){if(inList){out.push("</ul>");inList=false}out.push("<h4>"+inline(t.replace(/^#+\s*/,""))+"</h4>");return}
+    if(/^[-•*]\s/.test(t)){if(!inList){out.push("<ul>");inList=true}out.push("<li>"+inline(t.replace(/^[-•*]\s*/,""))+"</li>");return}
+    if(inList){out.push("</ul>");inList=false}
+    if(t)out.push("<p>"+inline(t)+"</p>");
+  });
+  if(inList)out.push("</ul>");
+  (el||$("memo")).innerHTML=out.join("");
+}
+let memoMd="",aiActive=false,ctl=null;
+
+// ---------- global south resolution stack ----------
+const GS={
+ India:{
+  bank:["RBI–CBUAE Local Currency Settlement System (INR–AED, 2023)","Special Rupee Vostro Accounts (RBI, July 2022)","Bank of Baroda, HDFC Bank, State Bank of India trade desks","UPI–Aani cross-border linkage (India–UAE)"],
+  law:["GIFT City IFSC (International Financial Services Centres Authority)","Indian counsel: AZB, Cyril Amarchand, Trilegal"],
+  arb:["Mumbai Centre for International Arbitration (MCIA)","India International Arbitration Centre, New Delhi"],
+  ins:["GIC Re (General Insurance Corporation of India)","New India Assurance, Oriental Insurance"],
+  ship:["Indian-flag carriers and Mundra / Nhava Sheva brokers"],
+  vasp:["FIU-IND registered virtual asset service providers"]},
+ UAE:{
+  bank:["Emirates NBD, Mashreq, ADCB trade finance","CBUAE local currency settlement with partner central banks","Dirham (AED) invoicing to remove a USD leg"],
+  law:["DIFC and ADGM (English-language common-law jurisdictions)","Regional counsel: Al Tamimi, BSA, Afridi & Angell"],
+  arb:["Dubai International Arbitration Centre (DIAC)","arbitrateAD / ADGM Arbitration Centre"],
+  ins:["Local and regional cargo and credit insurers; regional reinsurance via GIC Re / African Re"],
+  ship:["Jebel Ali (DP World) brokers; non-G7 P&I cover"],
+  vasp:["VARA-licensed providers (Dubai)","ADGM FSRA-regulated exchanges","AED-backed stablecoins under the CBUAE Payment Token Services Regulation 2024"]},
+ China:{
+  bank:["CIPS (Cross-Border Interbank Payment System) for CNY","Bank of China, ICBC, CCB","Offshore CNH clearing in Hong Kong"],
+  law:["Hong Kong (common law) and PRC counsel","Note: Anti-Foreign Sanctions Law 2021 may require documenting any refusal"],
+  arb:["HKIAC (Hong Kong), CIETAC (mainland), SHIAC (Shanghai)"],
+  ins:["China P&I Club, PICC, Sinosure (export credit)"],
+  ship:["Chinese-flag carriers; Shanghai / Shenzhen brokers"],
+  vasp:["Hong Kong SFC-licensed VATPs; offshore CNH stablecoins"]},
+ Kazakhstan:{
+  bank:["Tenge settlement; EAEU payment infrastructure","Astana International Financial Centre (AIFC) banking"],
+  law:["AIFC (Astana) — English common law, English language","AIFC Court and International Arbitration Centre (IAC)"],
+  arb:["AIFC International Arbitration Centre, Astana"],
+  ins:["Regional and EAEU insurers"],
+  ship:["Caspian and overland (TITR) corridor brokers"],
+  vasp:["AIFC-regulated digital asset providers (AstanaHub / AFSA)"]},
+ Russia:{
+  bank:["SPFS (domestic messaging) and Mir cards — note EU connection bar and US secondary-sanctions risk","Rouble settlement via unfriendly-state accounts (Type-C / special accounts)"],
+  law:["Russian counsel for domestic enforceability"],
+  arb:["ICAC at the Russian CCI (MKAS), Moscow"],
+  ins:["Russian National Reinsurance Company (RNRC), Ingosstrakh, Sogaz"],
+  ship:["Russian registries and non-G7 brokers"],
+  vasp:["Domestic exchanges; experimental legal-tender crypto for foreign trade"]},
+ Singapore:{bank:["SGD trade finance; MAS-regulated banks (Western-aligned compliance)"],law:["Singapore counsel; common law"],arb:["SIAC (Singapore International Arbitration Centre)"],ins:["Regional cargo and credit insurers"],ship:["PSA Singapore brokers"],vasp:["MAS-licensed digital payment token providers"]},
+ "Hong Kong":{bank:["Offshore CNH and HKD clearing; Bank of China (HK)"],law:["Hong Kong common-law counsel"],arb:["HKIAC"],ins:["Regional P&I and credit cover"],ship:["Hong Kong registry and brokers"],vasp:["SFC-licensed virtual asset trading platforms"]},
+ "Türkiye":{bank:["TRY settlement; Turkish correspondent banks (watch US scrutiny of re-exports)"],law:["Turkish counsel"],arb:["Istanbul Arbitration Centre (ISTAC)"],ins:["Turkish cargo insurers"],ship:["Turkish-flag carriers and brokers"],vasp:["Regulated exchanges under the 2024 crypto framework"]},
+ Uzbekistan:{bank:["Som settlement; regional banks"],law:["Local counsel; Tashkent IAC"],arb:["Tashkent International Arbitration Centre (TIAC)"],ins:["Regional insurers"],ship:["Overland corridor brokers"],vasp:["NAPP-regulated providers"]},
+ "Saudi Arabia":{bank:["SAR settlement; SAMA-regulated banks"],law:["Saudi counsel"],arb:["Saudi Center for Commercial Arbitration (SCCA), Riyadh"],ins:["Local cooperative insurers"],ship:["Jeddah / Dammam brokers"],vasp:["Regulated under SAMA / CMA frameworks"]}
+};
+const GSLAB={bank:"Banking and settlement",law:"Law firms and hubs",arb:"Arbitration seat",ins:"Insurance and reinsurance",ship:"Shipping and logistics",vasp:"Digital-asset settlement"};
+function renderGS(A){
+  const corr=[A.d.origin,A.d.dest,A.d.onward].filter((v,i,a)=>v&&v!=="Other"&&a.indexOf(v)===i).join(" · ");
+  if($("dirHead"))$("dirHead").textContent="Partner network"+(corr?" · "+corr:"");
+  const states=[...new Set([A.d.origin,A.d.dest,A.d.onward])].filter(c=>GS[c]);
+  const blocked=A.prohibited;
+  $("gsIntro").textContent=blocked?
+    "A regime binding this stack prohibits the deal, so routing cannot cure it (see the resolution plan above). The stack below is shown for reference only.":
+    `Recommended lawful service stack for the ${[A.d.origin,A.d.dest,A.d.onward].filter((v,i,a)=>v&&v!=="Other"&&a.indexOf(v)===i).join(" → ")} corridor.`;
+  if(!states.length){$("gsStack").innerHTML='<p class="hint">Choose corridor countries to see the stack.</p>';return}
+  const cats=["bank","law","arb","ins","ship","vasp"];
+  $("gsStack").innerHTML=cats.map(cat=>{
+    const items=states.filter(st=>GS[st][cat]).map(st=>`<li><b>${esc(st)}:</b> ${GS[st][cat].map(esc).join("; ")}</li>`).join("");
+    return items?`<article><header><span class="pill p-n">${esc(GSLAB[cat])}</span></header><ul style="list-style:none;padding-left:0">${items}</ul></article>`:"";
+  }).join("");
+}
+
+// ---------- resolve ----------
+const HOWTO={
+ inbound:{title:"How to receive the funds lawfully",steps:[
+   "Use a bank that accepts the corridor and the payer's jurisdiction; expect enhanced due diligence on inbound funds from a higher-risk origin.",
+   "Screen the payer and its beneficial owners before the first receipt, and re-screen before each payment.",
+   "Document the source of funds and the underlying contract or invoice; the bank will ask for the purpose code and supporting papers.",
+   "Choose the rail: an AED or INR local-currency receipt avoids a USD correspondent and the US nexus it brings; a USD receipt routes through a US bank.",
+   "Keep the screening record, contract and source-of-funds evidence on file for the bank and the regulator."],
+   law:"<b>Framework:</b> UAE — CBUAE AML/CFT rules, Cabinet Decision 74 of 2020 (UN and Local List freeze), UBO register. India — FEMA realisation and purpose-code reporting, PMLA. A virtual-asset leg adds the Travel Rule."},
+ invest:{title:"How to take the investment lawfully",steps:[
+   "Screen the investor and every ultimate beneficial owner; establish and document the source of wealth.",
+   "Confirm the sector and FDI route (India: automatic vs government approval; most sectors are automatic and Russia is not caught by Press Note 3).",
+   "Use a bank that will take the inbound capital; expect enhanced due diligence on a Russian-national investor even when undesignated.",
+   "Route the funds on a clean rail and keep the investment agreement and valuation on file.",
+   "File the FDI reporting (India: FC-GPR through the AD bank on FIRMS)."],
+   law:"<b>Framework:</b> India — FEMA FDI rules, Press Note 3 (2020) land-border test, FIRMS reporting. UAE — CBUAE AML, UBO register. Source-of-wealth evidence throughout."},
+ trade:{title:"How to run the trade lawfully",steps:[
+   "Screen the buyer, its owners, the banks and the carrier.",
+   "Confirm the goods are not prohibited for the destination and check export controls (India SCOMET; the Common High Priority List for diversion risk).",
+   "Obtain an end-user certificate and a no-re-export clause where diversion is a risk.",
+   "Choose a clean settlement rail and keep the shipping and payment documents on file."],
+   law:"<b>Framework:</b> DGFT export rules and SCOMET (India), destination controls, and the screening and documentation standards banks expect."}
+};
+function resolve(A){
+  const d=A.d,R=[];
+  const base=HOWTO[d.type]||HOWTO.trade;
+  R.push({sev:"info",title:base.title,problem:"Baseline steps for this kind of transaction, whether or not a flag fires below.",steps:base.steps,law:base.law});
+  const hits=A.results.filter(r=>r.r.status==="hit"), poss=A.results.filter(r=>r.r.status==="possible");
+  const corridor=[d.origin,d.dest,d.onward];
+  hits.forEach(h=>{
+    const bank=/bank/i.test(h.role);
+    if(h.binding){
+      R.push({sev:"crit",title:`Prohibited party: ${h.name}`,problem:`${h.r.e.n} is designated under ${h.bindRegs.join(", ")} — a regime that binds a party or provider in this stack (currency, bank, insurer or route). For that reason dealing is prohibited, not merely risky.`,
+        steps:[
+          "Exit: do not proceed, or remove the binding nexus (the UK/EU/US provider, insurer or currency) and confirm no other binding regime then applies.",
+          `Licence: if there is a genuine basis (wind-down, humanitarian, pre-existing contract), apply to the competent authority (OFSI${h.bindRegs.includes("US")?" / OFAC":""}${h.bindRegs.includes("UN")?" / the UN implementation authority":""}).`,
+          "Replace: source from or sell to an unconnected party. Re-routing the same deal through an intermediary to escape the listing is the circumvention offence for anyone with that nexus."],
+        law:"<b>Binding prohibition:</b> the designating regime reaches a party or provider here (UK Russia Regs reg. 19 / EU Art. 12 / US evasion provisions apply to the nexus party)."});
+    } else {
+      R.push({sev:"warn",title:`Non-binding designation: ${h.name}`,problem:`${h.r.e.n} is designated by ${h.r.e.l.join(", ")}, but under regimes that do not bind this stack. It is not prohibited under Indian or UAE domestic law. The exposure is secondary sanctions and provider refusal — a risk to price and bankability, not an offence by the UAE entity.`,
+        steps:[
+          bank?"Use a bank that will process the payment after its own review; expect enhanced due diligence, and accept that many will still refuse.":"The deal is lawful for these parties under their own law; the practical obstacle is which providers will take it.",
+          "Keep the stack free of any US/EU/UK nexus (no USD or EUR leg, no UK/EU/US bank, insurer, broker or counsel) so that no binding prohibition is triggered.",
+          "Confirm there is no US-origin or US-technology content in the goods, which would carry US export-control reach regardless of the stack.",
+          "Record the analysis: lawful under Indian/UAE law, residual secondary-sanctions risk identified and accepted at board level."],
+        law:"<b>Why not prohibited:</b> India and the UAE implement UN listings, not UK/EU/US unilateral ones. US secondary sanctions and export controls are enforcement authorities and policy, not prohibitions binding a UAE entity."});
+    }
+  });
+  poss.forEach(h=>R.push({sev:"warn",title:`Possible match: ${h.name}`,problem:`The name resembles ${h.r.e.n}.`,
+    steps:["Obtain the registration number, registered address, date of incorporation and directors.","Compare against the list entry's identifiers.","If it is a different entity, record the false positive with the evidence; if it is the same, treat it as a designated party."],
+    law:"<b>Standard:</b> OFSI and OFAC both expect matches to be resolved on identifiers, not names alone, and the reasoning kept on file."}));
+  if(A.aggregate>=50&&A.ownBinding)R.push({sev:"crit",title:`The ${d.cpLabel} is blocked by ownership`,problem:`Designated persons under a binding regime hold ${A.aggregate}% of ${d.buyer||"the "+d.cpLabel}.`,
+    steps:[`Treat the ${d.cpLabel} as blocked until ownership genuinely changes.`,"A divestment counts only if complete, genuine and irrevocable before the deal, with no designated person keeping control or benefit; OFAC and OFSI look through sham transfers.","Otherwise apply for a licence or exit."],
+    law:"<b>Tests:</b> US 50% rule aggregates all blocked owners; UK and EU look to >50% ownership by a designated person and, separately, to control."});
+  else if(A.aggregate>=50)R.push({sev:"warn",title:"Majority designated ownership (non-binding)",problem:`Designated persons hold ${A.aggregate}% of ${d.buyer||"the "+d.cpLabel}, but only under regimes that do not bind this stack.`,
+    steps:[`Not prohibited under Indian/UAE law, but the ${d.cpLabel} will be treated as blocked by any US/EU/UK-exposed bank or counterparty, so bankability is the real constraint.`,"Obtain the full register and confirm no binding regime reaches any party or provider.","Document the risk acceptance."],
+    law:"<b>Note:</b> the 50% rule is a US/EU/UK test; it bites on this deal only through secondary-sanctions exposure, not as a domestic prohibition."});
+  else if(A.aggregate>0)R.push({sev:"warn",title:"Minority designated ownership",problem:`${A.aggregate}% is held by designated persons.`,
+    steps:[`Obtain the ${d.cpLabel}'s articles, shareholders' agreement and board composition.`,"Confirm in writing that no designated person can appoint directors, veto decisions or direct the business.","Ensure no funds or benefit flow to the designated shareholder (no dividends from this deal)."],
+    law:"<b>Control:</b> UK and EU control tests can catch a minority holder with board or veto rights; the funds must not be made available to the designated person indirectly."});
+  if((d.buyer||A.shRes.length)&&A.totalPct<100)R.push({sev:"warn",title:"Ownership not yet established",problem:(A.shRes.length?`Only ${A.totalPct}% of the ${d.cpLabel}'s ownership is identified.`:`No ownership information for the ${d.cpLabel}${d.buyer?" ("+d.buyer+")":""} has been provided.`),
+    steps:[d.dest==="UAE"?"Obtain the trade licence, memorandum of association and UBO register filing (UAE Cabinet Decision 109 of 2023 requires companies to keep it).":"Obtain the shareholder register and beneficial ownership declaration from the local registry.","Obtain a signed UBO declaration naming every person above 25%.","Re-screen every new name."],
+    law:"<b>Local law helps here:</b> UAE and Indian beneficial ownership rules (India: Companies (Significant Beneficial Owners) Rules 2018) give you a lawful right to ask for this information."});
+  if(A.chpl&&(A.russiaTouch||A.diversion))R.push({sev:"warn",title:"High-priority goods through a diversion route",problem:`HS ${d.hs.slice(0,4)} is on the Common High Priority List and the route runs through ${[d.dest,d.onward].filter(c=>DIVERSION.includes(c)).join(", ")}.`,
+    steps:["Get an end-user certificate from the final user, naming the end use.","Put a no-re-export-to-Russia-or-Belarus clause in the contract, with audit and termination rights.","Check the chips' manufacturer and origin: US-origin or US-technology items stay under US export controls (EAR) wherever they are sold, so re-export to Russia would need a BIS licence.","Check the onward buyer's order history against its stated business (volumes, product mix)."],
+    law:`<b>Local law:</b> India controls dual-use exports through DGFT's SCOMET list; check whether the item is SCOMET-listed. ${d.onward==="Kazakhstan"?"Kazakhstan has its own export controls and is under scrutiny for re-exports.":""}`});
+  if(A.russiaTouch)R.push({sev:"crit",title:"Russia or Belarus nexus",problem:"Lawful only if no designated party, nothing prohibited in the underlying goods or services, and no Western nexus that triggers a prohibition.",
+    steps:["Confirm every Russian party is undesignated and not owned or controlled by a designated person.","Confirm the underlying goods or services are not prohibited under any regime that applies to you (UK, EU and US lists are wide).","Keep the stack free of any UK, EU or US person: no USD or EUR leg, no UK or EU insurer, bank or broker, no Western-origin controlled goods.","Use a bank that expressly accepts Russia-related business after its own review; expect enhanced due diligence."],
+    law:"<b>Local mechanisms:</b> India permits rupee trade settlement through Special Rupee Vostro Accounts (RBI, July 2022). This is lawful for undesignated parties and lawful goods. It does not make a prohibited deal lawful for anyone with Western nexus."});
+  if(d.rail==="spfs")R.push({sev:"crit",title:"SPFS settlement",problem:"EU persons are barred from connecting to SPFS, and non-Western banks using it risk US secondary sanctions.",
+    steps:["Switch to INR–AED local currency settlement, CNY via CIPS, or a regulated bank route.","Confirm the receiving bank's acceptance in writing before proceeding."],
+    law:"<b>Alternative:</b> the RBI–CBUAE local currency settlement framework (2023) settles directly in rupees and dirhams."});
+  if(d.rail==="usd"&&!hits.length&&A.aggregate<50)R.push({sev:"info",title:"Unnecessary US nexus",problem:"USD clearing routes the payment through a US correspondent bank, bringing US sanctions law onto a transaction that otherwise has no US party.",
+    steps:["Settle in local currency instead — INR or AED under the RBI–CBUAE framework, or CNY via CIPS — so no US bank touches the funds.","Confirm both banks support the chosen rail and price the FX in the contract."],
+    law:"<b>Lawful structuring:</b> choosing a non-USD rail for a clean transaction between undesignated parties is legitimate. It is not lawful as a device to deal with a designated person."});
+  if(d.rail==="stable")R.push({sev:"warn",title:"Stablecoin settlement",problem:"Regulatory status depends on the token and the provider.",
+    steps:["Use a VARA-licensed provider in Dubai (or ADGM/FSRA-regulated in Abu Dhabi).","Note that payments in the UAE mainland must use AED stablecoins licensed by the Central Bank (Payment Token Services Regulation 2024); foreign stablecoins are restricted to crypto purchases.","Apply the Travel Rule and screen wallet addresses.","Know the issuer: USD stablecoin issuers are typically US-regulated and freeze wallets linked to designated persons."],
+    law:"<b>Local law:</b> VARA rulebooks, CBUAE Payment Token Services Regulation, India's FIU-IND registration for VASPs."});
+  if(d.type==="trade"&&!d.enduser)R.push({sev:"warn",title:"Unknown end user",problem:"No end user is identified.",steps:["Obtain an end-user statement before shipment.","Screen the end user."],law:"<b>Standard:</b> expected by UK, EU and US guidance and by Indian DGFT for controlled items."});
+  if(!R.length)R.push({sev:"ok",title:"No issues to resolve",problem:"No list matches or structural red flags on the information given.",steps:["Keep the screening record and documents on file.","Re-screen before payment and at shipment."],law:"<b>Note:</b> lists change weekly; re-screening is the main control."});
+
+  const blocked=A.prohibited;
+  const verdict=blocked?["p-crit","Prohibited","A regime binding a party or provider in the stack prohibits this deal. The lawful routes are exit, a licence, or removing the binding nexus and changing counterparty."]:
+    R.some(r=>r.sev==="crit"||r.sev==="warn")?["p-warn","Resolvable","The deal can proceed lawfully once the steps below are complete and on file."]:["p-ok","Clear","Proceed with standard documentation."];
+  return{R,verdict};
+}
+function localFramework(A){
+  const c=new Set([A.d.origin,A.d.dest,A.d.onward]),L=[];
+  if(c.has("India"))L.push(["India",["FEMA 1999 and RBI rules on export proceeds (realisation within the permitted period)","RBI–CBUAE local currency settlement (2023) and Special Rupee Vostro Accounts for INR trade","DGFT SCOMET list for dual-use exports","UN sanctions implemented through UAPA orders and MEA notifications","PMLA 2002 AML obligations on banks and reporting entities"]]);
+  if(c.has("UAE"))L.push(["UAE",["Cabinet Decision 74 of 2020: UN and Local Terrorist List targeted financial sanctions (freeze within 24 hours)","Federal AML/CFT law and CBUAE guidance for banks","UBO register (Cabinet Decision 109 of 2023)","VARA (Dubai) and CBUAE Payment Token Services Regulation for virtual assets","Strategic goods control under the Executive Office for Control and Non-Proliferation"]]);
+  if(c.has("China")||c.has("Hong Kong"))L.push(["China",["Anti-Foreign Sanctions Law 2021 and the Unreliable Entity List: complying with foreign sanctions can create liability in China, so document the reason for any refusal","CIPS for CNY settlement","Export Control Law 2020 for dual-use items"]]);
+  if(c.has("Kazakhstan"))L.push(["Kazakhstan",["National export control rules and EAEU customs union","Heightened Western scrutiny of re-exports; banks apply enhanced checks"]]);
+  if(c.has("Russia"))L.push(["Russia",["Counter-sanctions and capital controls (approval for some transactions with 'unfriendly' state parties)","SPFS and rouble settlement rules"]]);
+  return L;
+}
+function renderResolve(A){
+  const {R,verdict}=resolve(A);
+  $("verdict").className="verdict "+verdict[0];
+  $("verdict").innerHTML=`<span class="pill ${verdict[0]}" style="background:var(--panel)">${verdict[1]}</span><span>${esc(verdict[2])}</span>`;
+  const pc={crit:"p-crit",warn:"p-warn",ok:"p-ok",info:"p-n"},pl={crit:"Must fix",warn:"Resolve first",ok:"Clear",info:"Recommended"};
+  $("fix").innerHTML=R.map(r=>`<article><header><span class="pill ${pc[r.sev]}">${pl[r.sev]}</span><h3>${esc(r.title)}</h3></header><p style="margin:0">${esc(r.problem)}</p><ol>${r.steps.map(s=>`<li>${esc(s)}</li>`).join("")}</ol><p class="law" style="margin:0">${r.law}</p></article>`).join("");
+  $("localLaw").innerHTML=localFramework(A).map(([k,v])=>`<article><header><h3>${esc(k)}</h3></header><ul>${v.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></article>`).join("")||'<p class="hint">Choose India, UAE, China, Kazakhstan or Russia in the corridor to see local rules.</p>';
+  return R;
+}
+function setView(v){
+  document.querySelectorAll("[data-view]").forEach(el=>el.hidden=el.dataset.view!==v);
+  $("vRisk").setAttribute("aria-pressed",v==="risks");$("vRes").setAttribute("aria-pressed",v==="resolve");
+}
+$("vRisk").onclick=()=>setView("risks");$("vRes").onclick=()=>setView("resolve");
+
+// directory
+const DIR=[["Banks and payment providers","INR–AED settlement, trade finance",0,6],["Law firms","India, UAE, onward markets",0,8],["Cargo insurers","Marine and credit cover",0,4],["Freight and shipping brokers","Mumbai, Mundra, Jebel Ali",0,5],["Tax advisers","Transfer pricing, VAT, GST",0,4],["VARA-licensed VASPs","Regulated stablecoin settlement",0,3]];
+$("dir").innerHTML=DIR.map(x=>`<div><b>${esc(x[0])}</b><small>${esc(x[1])}</small><span class="pill p-warn" style="align-self:flex-start;margin-top:4px">Recruiting · ${x[2]} of ${x[3]}</span></div>`).join("");
+
+// prompt wiring
+$("examples").innerHTML=EXAMPLES.map((e,i)=>`<button type="button" class="ghost" data-i="${i}">${e[0]}</button>`).join("");
+$("examples").querySelectorAll("button").forEach(b=>b.onclick=()=>{$("prompt").value=EXAMPLES[+b.dataset.i][1];analysePrompt()});
+$("goBtn").onclick=analysePrompt;
+$("f").addEventListener("submit",e=>e.preventDefault());
+
+$("copyBtn").onclick=async()=>{const txt=$("memo").innerText;try{await navigator.clipboard.writeText(txt);$("copyBtn").textContent="Copied"}catch(e){const r=document.createRange();r.selectNodeContents($("memo"));const s=getSelection();s.removeAllRanges();s.addRange(r);$("copyBtn").textContent="Selected, press copy"}setTimeout(()=>$("copyBtn").textContent="Copy memo",1800)};
+$("counselBtn").onclick=()=>{$("counsel").hidden=!$("counsel").hidden};
+
+$("prompt").value=EXAMPLES[0][1];
+analysePrompt();
+
+// AI drafting via the viewer's Claude
+(async()=>{
+  if(!window.claude)return;
+  const sample=await claude.use("sample");sampleFn=sample;
+  if(!sample)return;
+  const btn=$("aiBtn");btn.hidden=false;
+  btn.onclick=async()=>{
+    const A=last;btn.disabled=true;$("stopBtn").hidden=false;ctl=new AbortController();
+    $("memoStatus").textContent="Claude is drafting. This usually takes 20–60 seconds.";
+    const facts=JSON.stringify({transaction:A.d,settlementRail:railName(A.d.rail),shareholders:A.shRes.map(s=>({name:s.name,pct:s.pct,screening:s.r.status,match:s.r.e&&s.r.status!=="clear"?s.r.e.n:null})),screening:A.results.map(r=>({name:r.name,role:r.role,result:r.r.status,match:r.r.status!=="clear"?r.r.e.n+" ("+r.r.e.l.join(", ")+")":null})),aggregateDesignatedOwnership:A.aggregate,largestSingleDesignatedHolding:A.maxSingle,identifiedOwnership:A.totalPct,ruleFlags:A.flags.map(f=>f[1]+": "+f[2]),exposure:A.ex.map(e=>e[0]+": "+e[1]+" — "+e[3]),legalStatus:A.prohibited?"prohibited under binding law":"not prohibited under this stack",enforcementRisk:A.level},null,1);
+    const prompt=`You are a senior sanctions compliance lawyer advising a trading company's compliance officer. Draft a sanctions and trade compliance memo in UK English on the transaction below.
+
+Use only the facts given. Where a fact is missing, say what must be obtained. Do not invent list entries or ownership. Screening was run against a limited demo list, so note that full-list screening is still required.
+
+Cover, with these exact markdown headings (## ):
+## Summary and recommendation (proceed / proceed with conditions / do not proceed, in 3–4 sentences)
+## Transaction and parties
+## Screening results
+## Ownership and control (apply the US 50% aggregation rule and the UK and EU ownership and control tests separately)
+## Regime-by-regime analysis (US, UK, EU, UN, and the local regimes of each corridor state; cover goods controls including the Common High Priority List, diversion risk, and the settlement rail)
+## Red flags and mitigations
+## Conditions and documents required before shipment
+## Escalation (whether counsel review is needed and why)
+
+Be specific and practical. Use short paragraphs and bullet lists. About 600–900 words. Do not include a title line or date.
+
+FACTS:
+${facts}`;
+    try{
+      const {text}=await sample(prompt,{signal:ctl.signal,modelTier:"default",onText:({text})=>{aiActive=true;renderMemo(memoHead(A)+"\n"+text)}});
+      aiActive=true;memoMd=memoHead(A)+"\n"+text;renderMemo(memoMd);
+      $("memoStatus").textContent="Drafted by Claude from the case file. Review before relying on it.";
+    }catch(e){
+      if(e&&e.text){aiActive=true;renderMemo(memoHead(A)+"\n"+e.text)}
+      const m={not_granted:"Claude drafting was not allowed for this page, so the standard memo is shown.",rate_limited:"Too many requests just now. Try again in a minute.",aborted:"Drafting stopped."};
+      $("memoStatus").textContent=m[e&&e.code]||"Claude could not finish the draft. The standard memo is still available.";
+      if(e&&e.code==="not_granted")btn.hidden=true;
+      if(!e||!e.text){aiActive=false;run()}
+    }finally{btn.disabled=false;$("stopBtn").hidden=true}
+  };
+  $("stopBtn").onclick=()=>ctl&&ctl.abort();
+  // resolution plan
+  const rb=$("aiRes");rb.hidden=false;let rctl=null;
+  rb.onclick=async()=>{
+    const A=last;const {R}=resolve(A);rb.disabled=true;$("stopRes").hidden=false;rctl=new AbortController();
+    $("resStatus").hidden=false;$("resStatus").textContent="Claude is drafting the resolution plan. This usually takes 20–60 seconds.";$("resAi").hidden=false;$("resAi").textContent="";
+    const prompt=`You are a senior sanctions and trade compliance lawyer. Write a practical resolution plan in UK English for the transaction below, telling the compliance officer exactly how to complete it lawfully.
+
+Rules:
+- Distinguish a binding prohibition from a risk. A regime only prohibits where it binds a party or provider in the stack (a UK/EU/US person, bank, insurer, currency leg, or a UN listing). There, the options are exit, a licence, or removing the binding nexus and changing counterparty; do not suggest intermediaries or re-routing to keep a bound deal outside reach, as that is circumvention. Where a party is designated only under a regime that does NOT bind this stack, say plainly it is not prohibited under Indian/UAE law, then set out the secondary-sanctions and export-control RISK and how to manage it.
+- For a clean trade between undesignated parties, you may recommend lawful structuring that avoids unnecessary Western nexus (for example INR–AED local currency settlement instead of USD), and explain why it is lawful.
+- Use the local law of each corridor state (India, UAE and any others listed): RBI and FEMA rules, Special Rupee Vostro Accounts, DGFT SCOMET, UAE Cabinet Decision 74 of 2020, UAE UBO rules, VARA and CBUAE payment token rules, and China's Anti-Foreign Sanctions Law where relevant.
+- Use only the facts given; say what must be obtained where facts are missing.
+
+Use these markdown headings (## ): Verdict; Steps before contract; Steps before shipment; Payment route; Documents to keep on file; When to escalate to counsel. Bullet lists, about 500–800 words. No title line.
+
+FACTS:
+${JSON.stringify({transaction:A.d,rail:railName(A.d.rail),screening:A.results.map(r=>({name:r.name,role:r.role,result:r.r.status,match:r.r.status!=="clear"?r.r.e.n+" ("+r.r.e.l.join(", ")+")":null})),aggregateDesignatedOwnership:A.aggregate,identifiedOwnership:A.totalPct,issues:R.map(r=>r.title+": "+r.problem)},null,1)}`;
+    try{
+      const {text}=await sample(prompt,{signal:rctl.signal,modelTier:"default",onText:({text})=>renderMemo(text,$("resAi"))});
+      renderMemo(text,$("resAi"));$("resStatus").textContent="Drafted by Claude from the case file. Review before relying on it.";
+    }catch(e){
+      if(e&&e.text)renderMemo(e.text,$("resAi"));else $("resAi").hidden=true;
+      const m={not_granted:"Claude drafting was not allowed for this page.",rate_limited:"Too many requests just now. Try again in a minute.",aborted:"Drafting stopped."};
+      $("resStatus").textContent=m[e&&e.code]||"Claude could not finish the plan. The rule-based steps below still apply.";
+      if(e&&e.code==="not_granted")rb.hidden=true;
+    }finally{rb.disabled=false;$("stopRes").hidden=true}
+  };
+  $("stopRes").onclick=()=>rctl&&rctl.abort();
+})();
+function memoHead(A){const today=new Date().toLocaleDateString("en-GB",{day:"numeric",month:"long",year:"numeric"});return `@head|Prepared ${today}|Matter ${A.d.exporter} → ${A.d.buyer}|Route ${A.d.origin} → ${A.d.dest}|Legal ${words(A).legal}`}
+})();
+</script>
+
+</body>
+</html>
