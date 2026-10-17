@@ -194,7 +194,7 @@ const COUNTRIES=["India","UAE","Russia","Belarus","China","Hong Kong","Kazakhsta
 const DIVERSION=["UAE","China","Hong Kong","Kazakhstan","Kyrgyzstan","Uzbekistan","Armenia","Georgia","Türkiye"];
 const RAILS=[
  ["lcs","INR–AED local currency settlement"],["usd","USD via correspondent bank"],["eur","EUR via correspondent bank"],
- ["vostro","INR via Special Rupee Vostro Account"],["cips","CNY via CIPS"],["stable","Stablecoin via VARA-licensed provider"],["spfs","RUB via SPFS"]];
+ ["vostro","INR via Special Rupee Vostro Account"],["cips","CNY via CIPS"],["stable","Stablecoin / USDT (VARA-licensed)"],["spfs","RUB via SPFS"],["gbp","GBP via correspondent bank"]];
 const INS=["India","UAE","United Kingdom","EU member state","Other","None"];
 // Illustrative sample (NOT a live feed) — representative designated parties with common spellings.
 // Replace wholesale with the output of ingest_sanctions.py (screening.list.js) for the real build.
@@ -265,6 +265,7 @@ function parsePrompt(text){
   if(/dirham|aed|rupee|inr|local currency|vostro|lcs/i.test(t))st.rail=(/receiv|inbound|vostro/i.test(t)&&/rupee|inr|vostro/i.test(t))?"vostro":"lcs";
   else if(/usd|dollar|correspondent/i.test(t))st.rail="usd";
   else if(/eur|euro/i.test(t))st.rail="eur";
+  else if(/gbp|pound|sterling|£/i.test(t))st.rail="gbp";
   else if(/cips|yuan|renminbi|rmb|cny/i.test(t))st.rail="cips";
   else if(/stablecoin|usdt|tether|crypto/i.test(t))st.rail="stable";
   else if(/spfs/i.test(t))st.rail="spfs";
@@ -282,7 +283,7 @@ function parsePrompt(text){
 }
 
 async function extractWithClaude(text){
-  const schema='Return ONLY a JSON object, no prose, with keys: type ("trade" if the client sells/exports goods, "inbound" if the client receives a payment, "invest" if someone invests into the client); client (your side); counterparty (the payer, buyer or investor on the other side); thirdParty; clientCountry; counterpartyCountry; onwardCountry; goods; hsCode; valueUsd (number); rail (one of lcs, vostro, usd, eur, cips, stable, spfs, or ""); clientBank; counterpartyBank; carrier; insurerJurisdiction (India, UAE, United Kingdom, EU member state, United States, Other or None); owners (array of {name, percent}); purpose. Map dirham/AED or rupee/INR to lcs, or vostro for a rupee receipt; dollar/USD to usd; euro to eur; yuan/CIPS to cips; stablecoin/USDT to stable; SPFS to spfs. Use "" or [] when unknown.';
+  const schema='Return ONLY a JSON object, no prose, with keys: type ("trade" if the client sells/exports goods, "inbound" if the client receives a payment, "invest" if someone invests into the client); client (your side); counterparty (the payer, buyer or investor on the other side); thirdParty; clientCountry; counterpartyCountry; onwardCountry; goods; hsCode; valueUsd (number); rail (one of lcs, vostro, usd, eur, gbp, cips, stable, spfs, or ""); clientBank; counterpartyBank; carrier; insurerJurisdiction (India, UAE, United Kingdom, EU member state, United States, Other or None); owners (array of {name, percent}); purpose. Map dirham/AED or rupee/INR to lcs, or vostro for a rupee receipt; dollar/USD to usd; euro to eur; pound/sterling/GBP to gbp; yuan/CIPS to cips; stablecoin/USDT to stable; SPFS to spfs. Use "" or [] when unknown.';
   const r=await sampleFn.json(schema+"\n\nTEXT:\n"+text,{modelTier:"quick"});
   const C=["trade","inbound","invest"];
   return {origin:r.clientCountry||"",dest:r.counterpartyCountry||"",onward:r.onwardCountry||"",exporter:r.client||"",buyer:r.counterparty||"",enduser:r.thirdParty||"",hs:String(r.hsCode||"").replace(/\D/g,""),goods:r.goods||"",value:+r.valueUsd||0,rail:r.rail||"",bankA:r.clientBank||"",bankB:r.counterpartyBank||"",carrier:r.carrier||"",ins:r.insurerJurisdiction||"None",type:C.includes(r.type)?r.type:"trade",purpose:r.purpose||"",sh:(r.owners||[]).filter(o=>o&&o.name).map(o=>({name:o.name,pct:+o.percent||0})),extraNames:[]};
@@ -375,7 +376,7 @@ function analyse(){
   const jur=n=>{n=(n||"").toLowerCase();for(const k in BANKJUR)if(n.includes(k))return BANKJUR[k];return null};
   const bind=new Set();
   [d.origin,d.dest,d.onward].forEach(c=>{if(c==="United States")bind.add("US");if(c==="United Kingdom")bind.add("UK");if(c==="EU member state")bind.add("EU")});
-  if(d.rail==="usd")bind.add("US"); if(d.rail==="eur")bind.add("EU");
+  if(d.rail==="usd")bind.add("US"); if(d.rail==="eur")bind.add("EU"); if(d.rail==="gbp")bind.add("UK");
   if(d.ins==="United Kingdom")bind.add("UK"); if(d.ins==="EU member state")bind.add("EU"); if(d.ins==="United States")bind.add("US");
   [jur(d.bankA),jur(d.bankB)].forEach(j=>{if(j)bind.add(j)});
   const bindingFor=e=>{const r=(e.l||[]).filter(x=>bind.has(x));if(e.un)r.push("UN");return r};
@@ -410,7 +411,7 @@ function analyse(){
     if(bind.has("EU")){score+=30;flags.push(["crit","SPFS — EU bar","An EU nexus is present and EU persons are barred from SPFS connectivity. Prohibited for that provider.","P"]);}
     else{score+=20;flags.push(["warn","SPFS — risk","SPFS carries US secondary-sanctions risk and most banks refuse it. Not a prohibition binding a UAE entity.","R"]);}
   }
-  if(d.rail==="usd"){score+=5;flags.push(["info","USD leg creates a US nexus","USD clearing routes through a US correspondent bank, bringing US law onto the payment. Switch to INR–AED or CNY to keep the stack clean.","R"]);}
+  if(["usd","eur","gbp"].includes(d.rail)){score+=5;const cc={usd:["USD","US"],eur:["EUR","EU"],gbp:["GBP","UK"]}[d.rail];flags.push(["info","Western-currency leg ("+cc[0]+")",cc[0]+" clearing routes through a "+cc[1]+" correspondent bank, bringing "+cc[1]+" law onto the payment. Treat the "+cc[0]+" figure as the value to move, and settle the equivalent on a non-Western rail (AED, INR, RUB or USDT).","R"]);}
   if(d.rail==="stable"){score+=10;flags.push(["warn","Stablecoin settlement","Confirm the provider is VARA- or ADGM-licensed, applies the Travel Rule, and that the issuer's freeze policy is understood (USD stablecoin issuers are typically US-regulated).","R"]);}
   if(d.rail==="lcs"){flags.push(["ok","Local currency settlement","INR–AED local currency settlement avoids a USD leg, so no US nexus arises from the currency.","N"]);}
   if(d.type==="trade"&&!d.enduser){score+=10;flags.push(["warn","End user unknown","Obtain an end-user statement before shipment and screen the end user.","R"]);}
@@ -581,9 +582,9 @@ function resolve(A){
   if(d.rail==="spfs")R.push({sev:"crit",title:"SPFS settlement",problem:"EU persons are barred from connecting to SPFS, and non-Western banks using it risk US secondary sanctions.",
     steps:["Switch to INR–AED local currency settlement, CNY via CIPS, or a regulated bank route.","Confirm the receiving bank's acceptance in writing before proceeding."],
     law:"<b>Alternative:</b> the RBI–CBUAE local currency settlement framework (2023) settles directly in rupees and dirhams."});
-  if(d.rail==="usd"&&!hits.length&&A.aggregate<50)R.push({sev:"info",title:"Unnecessary US nexus",problem:"USD clearing routes the payment through a US correspondent bank, bringing US sanctions law onto a transaction that otherwise has no US party.",
-    steps:["Settle in local currency instead — INR or AED under the RBI–CBUAE framework, or CNY via CIPS — so no US bank touches the funds.","Confirm both banks support the chosen rail and price the FX in the contract."],
-    law:"<b>Lawful structuring:</b> choosing a non-USD rail for a clean transaction between undesignated parties is legitimate. It is not lawful as a device to deal with a designated person."});
+  if(["usd","eur","gbp"].includes(d.rail)&&!hits.length&&A.aggregate<50){const cc={usd:["USD","US"],eur:["EUR","EU"],gbp:["GBP","UK"]}[d.rail];R.push({sev:"warn",title:`Convert the ${cc[0]} leg to a non-Western rail`,problem:`Settling in ${cc[0]} routes the payment through a ${cc[1]} correspondent bank and brings ${cc[1]} law onto a transaction that otherwise has no ${cc[1]} party. Move the equivalent value on a local rail instead.`,
+    steps:[`Settle the ${cc[0]} equivalent in AED or INR under the RBI–CBUAE local-currency framework (Special Rupee Vostro).`,"Or in CNY via CIPS; in RUB where every party is undesignated and the underlying goods/services are not prohibited; or in a VARA-licensed AED/USDT stablecoin.","Fix the FX reference rate and value date in the contract so the converted amount is locked.","Confirm the receiving bank or VASP supports the chosen rail before committing."],
+    law:"<b>Lawful structuring:</b> choosing a non-Western rail for a clean transaction between undesignated parties is legitimate. It is not lawful as a device to deal with a designated person."});}
   if(d.rail==="stable")R.push({sev:"warn",title:"Stablecoin settlement",problem:"Regulatory status depends on the token and the provider.",
     steps:["Use a VARA-licensed provider in Dubai (or ADGM/FSRA-regulated in Abu Dhabi).","Note that payments in the UAE mainland must use AED stablecoins licensed by the Central Bank (Payment Token Services Regulation 2024); foreign stablecoins are restricted to crypto purchases.","Apply the Travel Rule and screen wallet addresses.","Know the issuer: USD stablecoin issuers are typically US-regulated and freeze wallets linked to designated persons."],
     law:"<b>Local law:</b> VARA rulebooks, CBUAE Payment Token Services Regulation, India's FIU-IND registration for VASPs."});
@@ -618,9 +619,9 @@ function actionPlan(A){
   add(/source of funds|source of wealth|ownership gap|inbound receipt/.test(t),
     "Obtain the counterparty's register, a UBO declaration for every holder above 25%, and documentary source of funds or wealth — then re-screen every new name.",
     "UAE UBO register (Cabinet Decision 109/2023); India MCA Significant Beneficial Owner filing; GLEIF LEI for parent links; OpenCorporates; screen on OpenSanctions plus the primary OFAC/OFSI/EU/UN lists.");
-  add(/usd leg|unnecessary us nexus/.test(t),
-    "Switch off the USD leg: settle in INR–AED (RBI–CBUAE framework) or CNY via CIPS, so no US correspondent bank touches the funds.",
-    "INR–AED: State Bank of India or Bank of Baroda (Special Rupee Vostro account) paired with Emirates NBD or Mashreq. CNY: Bank of China or ICBC via CIPS. Confirm the account is live with the bank.");
+  add(/western-currency leg|convert the .* leg|usd leg|unnecessary us nexus/.test(t),
+    "Take the USD/GBP/EUR figure as the value to move, and settle the equivalent on a non-Western rail so no US/UK/EU correspondent touches the funds — AED or INR (RBI–CBUAE), CNY via CIPS, RUB where every party is undesignated, or a regulated AED/USDT stablecoin.",
+    "AED/INR: State Bank of India or Bank of Baroda (Special Rupee Vostro) with Emirates NBD or Mashreq. CNY: Bank of China or ICBC via CIPS. RUB: a bank that accepts the business after its own review. Stablecoin: a VARA-licensed VASP (AED token for UAE-mainland; confirm the USDT issuer's freeze policy). Fix the FX reference and value date in the contract.");
   add(/spfs — risk/.test(t),
     "Drop SPFS. Move to INR–AED local settlement or a regulated bank route the receiving bank will accept in writing.",
     "RBI–CBUAE local currency framework; get the receiving bank's written acceptance first.");
