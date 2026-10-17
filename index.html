@@ -4,34 +4,35 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Meridian Corridor Desk</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>*{box-sizing:border-box}html,body{margin:0}body{min-height:100%}img{max-width:100%}[hidden]{display:none!important}:root{color-scheme:light}</style>
 <style>
 /* Layout: two-pane desk — case file inputs left, live analysis right; stacks on phones */
+/* Monochrome: graphite, grey and white. Severity shown by tone/weight, not hue. */
 :root{
-  --bg:#f3f4f1; --panel:#ffffff; --ink:#18232a; --muted:#5b6870; --line:#d9ddd8;
-  --accent:#0d5c63; --accent-soft:#e1eeee; --saffron:#c77d12;
-  --ok:#2f7d4f; --ok-bg:#e4f2e8; --warn:#9a6200; --warn-bg:#fbf0d9; --crit:#b3261e; --crit-bg:#fbe5e3;
+  --bg:#ededee; --panel:#ffffff; --ink:#111113; --muted:#6c6c72; --line:#d6d6d9;
+  --accent:#111113; --accent-soft:#e6e6e8; --saffron:#6c6c72;
+  --ok:#111113; --ok-bg:#e6e6e8; --warn:#3a3a3e; --warn-bg:#d9d9dc; --crit:#000000; --crit-bg:#111113;
   --f-ui:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
-  --f-doc:"Newsreader",Georgia,"Times New Roman",serif;
+  --f-doc:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
   --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#11181c; --panel:#182227; --ink:#e4e9ea; --muted:#9aa8ae; --line:#2b383e;
-  --accent:#5fb7bd; --accent-soft:#1d3336; --saffron:#e3a34a;
-  --ok:#7cc896; --ok-bg:#1c3226; --warn:#e8b65a; --warn-bg:#352a14; --crit:#f08a82; --crit-bg:#3a1c1a; color-scheme:dark}}
+  --bg:#0a0a0b; --panel:#161618; --ink:#f0f0f1; --muted:#9a9aa1; --line:#2a2a2e;
+  --accent:#f0f0f1; --accent-soft:#222225; --saffron:#9a9aa1;
+  --ok:#f0f0f1; --ok-bg:#222225; --warn:#c9c9cf; --warn-bg:#2f2f34; --crit:#ffffff; --crit-bg:#f0f0f1; color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#11181c; --panel:#182227; --ink:#e4e9ea; --muted:#9aa8ae; --line:#2b383e;
-  --accent:#5fb7bd; --accent-soft:#1d3336; --saffron:#e3a34a;
-  --ok:#7cc896; --ok-bg:#1c3226; --warn:#e8b65a; --warn-bg:#352a14; --crit:#f08a82; --crit-bg:#3a1c1a; color-scheme:dark}
+  --bg:#0a0a0b; --panel:#161618; --ink:#f0f0f1; --muted:#9a9aa1; --line:#2a2a2e;
+  --accent:#f0f0f1; --accent-soft:#222225; --saffron:#9a9aa1;
+  --ok:#f0f0f1; --ok-bg:#222225; --warn:#c9c9cf; --warn-bg:#2f2f34; --crit:#ffffff; --crit-bg:#f0f0f1; color-scheme:dark}
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--ink);font-family:var(--f-ui);font-size:14px;line-height:1.5}
 .wrap{max-width:1280px;margin:0 auto;padding-block:20px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 header.top{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:8px 24px;border-bottom:2px solid var(--ink);padding-bottom:12px;margin-bottom:20px}
 .brand{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
-.brand h1{font-family:var(--f-doc);font-weight:600;font-size:30px;margin:0;letter-spacing:-.01em}
+.brand h1{font-family:var(--f-ui);font-weight:700;font-size:26px;margin:0;letter-spacing:.14em;text-transform:uppercase}
 .brand .tag{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
-.proto{font-family:var(--f-mono);font-size:11px;color:var(--saffron);border:1px solid var(--saffron);padding:2px 8px;border-radius:3px;text-transform:uppercase;letter-spacing:.06em}
+.proto{font-family:var(--f-mono);font-size:11px;color:var(--muted);border:1px solid var(--line);padding:2px 8px;border-radius:3px;text-transform:uppercase;letter-spacing:.06em}
 .grid{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:20px;align-items:start}
 @media (max-width:900px){.grid{grid-template-columns:minmax(0,1fr)}}
 .pane{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:18px;min-width:0}
@@ -57,7 +58,7 @@ button:disabled{opacity:.55;cursor:default}
 .dial{width:64px;height:64px;border-radius:50%;display:grid;place-items:center;font-family:var(--f-mono);font-size:20px;font-weight:500;border:5px solid currentColor}
 .lvl-low{color:var(--ok)} .lvl-med{color:var(--warn)} .lvl-high{color:var(--crit)}
 .pill{display:inline-block;font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;padding:2px 8px;border-radius:99px;white-space:nowrap}
-.p-ok{background:var(--ok-bg);color:var(--ok)} .p-warn{background:var(--warn-bg);color:var(--warn)} .p-crit{background:var(--crit-bg);color:var(--crit)} .p-n{background:var(--accent-soft);color:var(--accent)}
+.p-crit{background:var(--crit-bg);color:var(--bg)} .p-warn{background:var(--warn-bg);color:var(--ink)} .p-ok{background:var(--ok-bg);color:var(--ink)} .p-n{background:transparent;border:1px solid var(--muted);color:var(--muted)}
 .flags{display:flex;flex-direction:column;gap:8px;margin:0;padding:0;list-style:none}
 .flags li{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:start;padding:8px 10px;border-radius:4px;background:var(--bg)}
 .tbl{overflow-x:auto}
@@ -66,10 +67,10 @@ th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertic
 th{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600}
 td.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums;text-align:right}
 .bar{height:10px;border-radius:2px;background:var(--bg);position:relative;overflow:hidden;margin-top:6px}
-.bar span{position:absolute;inset:0 auto 0 0;background:var(--crit)}
+.bar span{position:absolute;inset:0 auto 0 0;background:var(--ink)}
 .bar i{position:absolute;top:0;bottom:0;left:50%;width:2px;background:var(--ink)}
-.memo{font-family:var(--f-doc);font-size:16px;line-height:1.6;max-width:72ch}
-.memo h4{font-family:var(--f-ui);font-size:12px;text-transform:uppercase;letter-spacing:.09em;color:var(--accent);margin:20px 0 6px}
+.memo{font-family:var(--f-ui);font-size:15px;line-height:1.6;max-width:72ch}
+.memo h4{font-family:var(--f-ui);font-size:12px;text-transform:uppercase;letter-spacing:.09em;color:var(--ink);margin:20px 0 6px;font-weight:600}
 .memo p{margin:0 0 10px} .memo ul{margin:0 0 10px;padding-left:20px}
 .memo .head{border-bottom:1px solid var(--line);padding-bottom:10px;margin-bottom:6px;font-family:var(--f-ui);font-size:13px;color:var(--muted);display:grid;grid-template-columns:auto 1fr;gap:2px 14px}
 .memo .head b{color:var(--ink);font-weight:600}
@@ -85,11 +86,15 @@ td.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums;text-align:ri
 .fix{display:grid;gap:14px}
 .fix article{border:1px solid var(--line);border-radius:5px;padding:14px;display:grid;gap:8px}
 .fix article header{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.prompt-h{font-size:22px;font-weight:600;letter-spacing:-.01em;margin:0 0 6px}
+.fix article.plan{border:1.5px solid var(--ink)}
+.fix .who{font-size:12px;color:var(--muted);margin-top:3px}
+#prompt{min-height:160px;width:100%;font-family:var(--f-ui);font-size:15px;line-height:1.5;border:1px solid var(--line);border-radius:6px;padding:12px;background:var(--bg);color:var(--ink);resize:vertical}
 .fix ol,.fix ul{margin:0;padding-left:20px;display:grid;gap:4px}
 .fix .law{font-size:12px;color:var(--muted);border-top:1px dashed var(--line);padding-top:8px}
 .fix .law b{color:var(--accent);font-weight:600}
-.verdict{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border-radius:5px}
-.note{font-size:12px;color:var(--muted);border-left:3px solid var(--saffron);padding:6px 10px;background:var(--bg);margin:0}
+.verdict{display:flex;gap:12px;align-items:center;padding:12px 14px;border-radius:5px;background:var(--accent-soft);border:1px solid var(--line)}
+.note{font-size:12px;color:var(--muted);border-left:2px solid var(--muted);padding:6px 10px;background:var(--bg);margin:0}
 textarea{min-height:120px;font-family:var(--f-mono);font-size:12px}
 @media (prefers-reduced-motion:no-preference){.pane{transition:border-color .2s}}
 </style>
@@ -97,22 +102,20 @@ textarea{min-height:120px;font-family:var(--f-mono);font-size:12px}
 <body>
 <div class="wrap">
   <header class="top">
-    <div class="brand"><h1>Meridian</h1><span class="tag">Corridor trade compliance desk</span></div>
+    <div class="brand"><h1>Meridian</h1><span class="tag">Key issue identification and resolution</span></div>
     <span class="proto">Prototype · demo data</span>
   </header>
 
   <div class="grid">
     <!-- INPUTS -->
     <form class="pane" id="f" autocomplete="off">
-      <h2>Describe the transaction</h2>
-      <p class="hint" style="margin-bottom:10px">Write the deal in plain English — who is paying, trading with or investing in whom, from where, in what currency, and who owns the counterparty. The desk screens the names and assesses it. Name a party such as "Alfabank" or "Vladimir Putin" to see screening fire.</p>
-      <textarea id="prompt" rows="6" style="min-height:150px;font-family:var(--f-ui);font-size:14px;line-height:1.5"></textarea>
+      <div class="prompt-h">So, what do you want?</div>
+      <p class="hint" style="margin-bottom:10px">Describe the deal in plain English — who is paying, trading with or investing in whom, from where, in what currency, and who owns the counterparty.</p>
+      <textarea id="prompt" placeholder="e.g. Our UAE company is receiving USD 200,000 from a Russian buyer, Ural Metals, paid via Alfabank in dirhams."></textarea>
       <div class="actions" style="margin-top:10px">
         <button type="button" class="primary" id="goBtn">Analyse</button>
         <span class="status" id="parseStatus"></span>
       </div>
-      <p class="hint" style="margin:12px 0 6px">Try an example</p>
-      <div id="examples" style="display:flex;flex-wrap:wrap;gap:6px"></div>
       <p class="note" id="parsed" style="margin-top:14px"></p>
     </form>
 
@@ -177,21 +180,8 @@ textarea{min-height:120px;font-family:var(--f-mono);font-size:12px}
       </section>
 
       <section class="pane" data-view="resolve" hidden>
-        <h2>Global South resolution stack</h2>
-        <p class="hint" id="gsIntro" style="margin-bottom:12px"></p>
-        <div class="fix" id="gsStack"></div>
-        <p class="note" style="margin-top:12px">These are lawful alternative service providers and rails for trade between non-designated parties in non-prohibited goods. They do not make a deal lawful where a designated person is involved.</p>
-      </section>
-
-      <section class="pane" data-view="resolve" hidden>
-        <h2>Local legal framework in this corridor</h2>
+        <h2>Local legal framework</h2>
         <div class="fix" id="localLaw"></div>
-      </section>
-
-      <section class="pane">
-        <h2 id="dirHead">Partner network</h2>
-        <div class="dir" id="dir"></div>
-        <p class="hint" style="margin-top:10px">Every partner passes the same screening and signs a compliance undertaking before listing.</p>
       </section>
     </div>
   </div>
@@ -252,12 +242,7 @@ let sh=[{name:"Rashid Al Mansoori",pct:45},{name:"Vostok Trade FZE",pct:30},{nam
 
 let sampleFn=null,state=null,stFromClaude=false;
 
-const EXAMPLES=[
- ["Export: India → UAE","Kaveri Components in India is exporting USD 420,000 of microcontroller chips (HS 854231) to Al Safa Electronics Trading in the UAE, onward to Steppe Industrial Supply in Kazakhstan, settled in dirhams. Al Safa is 30% owned by Vostok Trade FZE."],
- ["Inbound fee from Russia","Our client, an Indian engineering consultancy, is receiving a USD 150,000 fee from Ural Metals OOO, a Russian company, paid via Alfabank and settled in rupees through a vostro account."],
- ["Russian UHNWI investing in India","A Russian-national UHNWI resident in the UAE, Mr A. Petrov, wants to invest USD 5,000,000 for equity in an Indian logistics company. Petrov owns 100% of the investing vehicle."],
- ["A blocked case","An Indian firm is buying USD 1,000,000 of goods from a UAE company that is 51% owned by Vladimir Putin, paid in USD through a correspondent bank."]
-];
+
 
 // country detection
 const CMAP=[[/\bindia|indian\b/i,"India"],[/\buae\b|emirates|dubai|abu dhabi/i,"UAE"],[/russia|russian/i,"Russia"],[/belarus/i,"Belarus"],[/\bchina|chinese\b/i,"China"],[/hong ?kong/i,"Hong Kong"],[/kazakh/i,"Kazakhstan"],[/uzbek/i,"Uzbekistan"],[/\buk\b|united kingdom|britain|british|england/i,"United Kingdom"],[/european union|\beu\b|germany|german|france|french|netherlands|dutch|italy/i,"EU member state"],[/\bus\b|u\.s\.|united states|america|american/i,"United States"],[/singapore/i,"Singapore"],[/t[\u00fcu]rkiye|turkey|turkish/i,"T\u00fcrkiye"],[/saudi/i,"Saudi Arabia"]];
@@ -500,7 +485,6 @@ function run(){
   if(!aiActive){memoMd=baseMemo(A);renderMemo(memoMd)}
   $("counselText").value=counselNote(A);
   renderResolve(A);
-  renderGS(A);
 }
 
 function railName(r){return (RAILS.find(x=>x[0]===r)||["",r])[1]}
@@ -549,93 +533,9 @@ function renderMemo(md,el){
 }
 let memoMd="",aiActive=false,ctl=null;
 
-// ---------- global south resolution stack ----------
-const GS={
- India:{
-  bank:["RBI–CBUAE Local Currency Settlement System (INR–AED, 2023)","Special Rupee Vostro Accounts (RBI, July 2022)","Bank of Baroda, HDFC Bank, State Bank of India trade desks","UPI–Aani cross-border linkage (India–UAE)"],
-  law:["GIFT City IFSC (International Financial Services Centres Authority)","Indian counsel: AZB, Cyril Amarchand, Trilegal"],
-  arb:["Mumbai Centre for International Arbitration (MCIA)","India International Arbitration Centre, New Delhi"],
-  ins:["GIC Re (General Insurance Corporation of India)","New India Assurance, Oriental Insurance"],
-  ship:["Indian-flag carriers and Mundra / Nhava Sheva brokers"],
-  vasp:["FIU-IND registered virtual asset service providers"]},
- UAE:{
-  bank:["Emirates NBD, Mashreq, ADCB trade finance","CBUAE local currency settlement with partner central banks","Dirham (AED) invoicing to remove a USD leg"],
-  law:["DIFC and ADGM (English-language common-law jurisdictions)","Regional counsel: Al Tamimi, BSA, Afridi & Angell"],
-  arb:["Dubai International Arbitration Centre (DIAC)","arbitrateAD / ADGM Arbitration Centre"],
-  ins:["Local and regional cargo and credit insurers; regional reinsurance via GIC Re / African Re"],
-  ship:["Jebel Ali (DP World) brokers; non-G7 P&I cover"],
-  vasp:["VARA-licensed providers (Dubai)","ADGM FSRA-regulated exchanges","AED-backed stablecoins under the CBUAE Payment Token Services Regulation 2024"]},
- China:{
-  bank:["CIPS (Cross-Border Interbank Payment System) for CNY","Bank of China, ICBC, CCB","Offshore CNH clearing in Hong Kong"],
-  law:["Hong Kong (common law) and PRC counsel","Note: Anti-Foreign Sanctions Law 2021 may require documenting any refusal"],
-  arb:["HKIAC (Hong Kong), CIETAC (mainland), SHIAC (Shanghai)"],
-  ins:["China P&I Club, PICC, Sinosure (export credit)"],
-  ship:["Chinese-flag carriers; Shanghai / Shenzhen brokers"],
-  vasp:["Hong Kong SFC-licensed VATPs; offshore CNH stablecoins"]},
- Kazakhstan:{
-  bank:["Tenge settlement; EAEU payment infrastructure","Astana International Financial Centre (AIFC) banking"],
-  law:["AIFC (Astana) — English common law, English language","AIFC Court and International Arbitration Centre (IAC)"],
-  arb:["AIFC International Arbitration Centre, Astana"],
-  ins:["Regional and EAEU insurers"],
-  ship:["Caspian and overland (TITR) corridor brokers"],
-  vasp:["AIFC-regulated digital asset providers (AstanaHub / AFSA)"]},
- Russia:{
-  bank:["SPFS (domestic messaging) and Mir cards — note EU connection bar and US secondary-sanctions risk","Rouble settlement via unfriendly-state accounts (Type-C / special accounts)"],
-  law:["Russian counsel for domestic enforceability"],
-  arb:["ICAC at the Russian CCI (MKAS), Moscow"],
-  ins:["Russian National Reinsurance Company (RNRC), Ingosstrakh, Sogaz"],
-  ship:["Russian registries and non-G7 brokers"],
-  vasp:["Domestic exchanges; experimental legal-tender crypto for foreign trade"]},
- Singapore:{bank:["SGD trade finance; MAS-regulated banks (Western-aligned compliance)"],law:["Singapore counsel; common law"],arb:["SIAC (Singapore International Arbitration Centre)"],ins:["Regional cargo and credit insurers"],ship:["PSA Singapore brokers"],vasp:["MAS-licensed digital payment token providers"]},
- "Hong Kong":{bank:["Offshore CNH and HKD clearing; Bank of China (HK)"],law:["Hong Kong common-law counsel"],arb:["HKIAC"],ins:["Regional P&I and credit cover"],ship:["Hong Kong registry and brokers"],vasp:["SFC-licensed virtual asset trading platforms"]},
- "Türkiye":{bank:["TRY settlement; Turkish correspondent banks (watch US scrutiny of re-exports)"],law:["Turkish counsel"],arb:["Istanbul Arbitration Centre (ISTAC)"],ins:["Turkish cargo insurers"],ship:["Turkish-flag carriers and brokers"],vasp:["Regulated exchanges under the 2024 crypto framework"]},
- Uzbekistan:{bank:["Som settlement; regional banks"],law:["Local counsel; Tashkent IAC"],arb:["Tashkent International Arbitration Centre (TIAC)"],ins:["Regional insurers"],ship:["Overland corridor brokers"],vasp:["NAPP-regulated providers"]},
- "Saudi Arabia":{bank:["SAR settlement; SAMA-regulated banks"],law:["Saudi counsel"],arb:["Saudi Center for Commercial Arbitration (SCCA), Riyadh"],ins:["Local cooperative insurers"],ship:["Jeddah / Dammam brokers"],vasp:["Regulated under SAMA / CMA frameworks"]}
-};
-const GSLAB={bank:"Banking and settlement",law:"Law firms and hubs",arb:"Arbitration seat",ins:"Insurance and reinsurance",ship:"Shipping and logistics",vasp:"Digital-asset settlement"};
-function renderGS(A){
-  const corr=[A.d.origin,A.d.dest,A.d.onward].filter((v,i,a)=>v&&v!=="Other"&&a.indexOf(v)===i).join(" · ");
-  if($("dirHead"))$("dirHead").textContent="Partner network"+(corr?" · "+corr:"");
-  const states=[...new Set([A.d.origin,A.d.dest,A.d.onward])].filter(c=>GS[c]);
-  const blocked=A.prohibited;
-  $("gsIntro").textContent=blocked?
-    "A regime binding this stack prohibits the deal, so routing cannot cure it (see the resolution plan above). The stack below is shown for reference only.":
-    `Recommended lawful service stack for the ${[A.d.origin,A.d.dest,A.d.onward].filter((v,i,a)=>v&&v!=="Other"&&a.indexOf(v)===i).join(" → ")} corridor.`;
-  if(!states.length){$("gsStack").innerHTML='<p class="hint">Choose corridor countries to see the stack.</p>';return}
-  const cats=["bank","law","arb","ins","ship","vasp"];
-  $("gsStack").innerHTML=cats.map(cat=>{
-    const items=states.filter(st=>GS[st][cat]).map(st=>`<li><b>${esc(st)}:</b> ${GS[st][cat].map(esc).join("; ")}</li>`).join("");
-    return items?`<article><header><span class="pill p-n">${esc(GSLAB[cat])}</span></header><ul style="list-style:none;padding-left:0">${items}</ul></article>`:"";
-  }).join("");
-}
-
 // ---------- resolve ----------
-const HOWTO={
- inbound:{title:"How to receive the funds lawfully",steps:[
-   "Use a bank that accepts the corridor and the payer's jurisdiction; expect enhanced due diligence on inbound funds from a higher-risk origin.",
-   "Screen the payer and its beneficial owners before the first receipt, and re-screen before each payment.",
-   "Document the source of funds and the underlying contract or invoice; the bank will ask for the purpose code and supporting papers.",
-   "Choose the rail: an AED or INR local-currency receipt avoids a USD correspondent and the US nexus it brings; a USD receipt routes through a US bank.",
-   "Keep the screening record, contract and source-of-funds evidence on file for the bank and the regulator."],
-   law:"<b>Framework:</b> UAE — CBUAE AML/CFT rules, Cabinet Decision 74 of 2020 (UN and Local List freeze), UBO register. India — FEMA realisation and purpose-code reporting, PMLA. A virtual-asset leg adds the Travel Rule."},
- invest:{title:"How to take the investment lawfully",steps:[
-   "Screen the investor and every ultimate beneficial owner; establish and document the source of wealth.",
-   "Confirm the sector and FDI route (India: automatic vs government approval; most sectors are automatic and Russia is not caught by Press Note 3).",
-   "Use a bank that will take the inbound capital; expect enhanced due diligence on a Russian-national investor even when undesignated.",
-   "Route the funds on a clean rail and keep the investment agreement and valuation on file.",
-   "File the FDI reporting (India: FC-GPR through the AD bank on FIRMS)."],
-   law:"<b>Framework:</b> India — FEMA FDI rules, Press Note 3 (2020) land-border test, FIRMS reporting. UAE — CBUAE AML, UBO register. Source-of-wealth evidence throughout."},
- trade:{title:"How to run the trade lawfully",steps:[
-   "Screen the buyer, its owners, the banks and the carrier.",
-   "Confirm the goods are not prohibited for the destination and check export controls (India SCOMET; the Common High Priority List for diversion risk).",
-   "Obtain an end-user certificate and a no-re-export clause where diversion is a risk.",
-   "Choose a clean settlement rail and keep the shipping and payment documents on file."],
-   law:"<b>Framework:</b> DGFT export rules and SCOMET (India), destination controls, and the screening and documentation standards banks expect."}
-};
 function resolve(A){
   const d=A.d,R=[];
-  const base=HOWTO[d.type]||HOWTO.trade;
-  R.push({sev:"info",title:base.title,problem:"Baseline steps for this kind of transaction, whether or not a flag fires below.",steps:base.steps,law:base.law});
   const hits=A.results.filter(r=>r.r.status==="hit"), poss=A.results.filter(r=>r.r.status==="possible");
   const corridor=[d.origin,d.dest,d.onward];
   hits.forEach(h=>{
@@ -704,13 +604,59 @@ function localFramework(A){
   if(c.has("Russia"))L.push(["Russia",["Counter-sanctions and capital controls (approval for some transactions with 'unfriendly' state parties)","SPFS and rouble settlement rules"]]);
   return L;
 }
+// Specific action plan built from the MUST FIX / warn items, each naming the
+// providers that actually support that fix (verify current licence status at source).
+function actionPlan(A){
+  const t=A.flags.filter(f=>f[0]==="crit"||f[0]==="warn").map(f=>f[1]).join(" | ").toLowerCase();
+  const out=[],add=(c,doIt,who)=>{if(c)out.push({do:doIt,who:who})};
+  add(/prohibited party|prohibited ownership|russia prohibitions|oil price cap applies|spfs — eu/.test(t),
+    "Do not proceed as structured. Exit, apply for a licence, or remove the UK/EU/US nexus (provider, insurer or currency) and change counterparty.",
+    "Licensing: OFSI (UK), OFAC (US) or the relevant national authority — check for an existing general licence on the regulator's own site before applying.");
+  add(/secondary-sanctions|non-binding designation|ownership — secondary|majority designated|minority/.test(t),
+    "Treat as lawful under Indian/UAE law but high-risk. Get board sign-off on the residual secondary-sanctions risk and route it through a provider that accepts the business after its own review.",
+    "Use a bank without US-correspondent exposure (many regional banks still decline). Verify each bank's own Russia/sanctions policy directly and confirm its correspondents via GLEIF before onboarding.");
+  add(/source of funds|source of wealth|ownership gap|inbound receipt/.test(t),
+    "Obtain the counterparty's register, a UBO declaration for every holder above 25%, and documentary source of funds or wealth — then re-screen every new name.",
+    "UAE UBO register (Cabinet Decision 109/2023); India MCA Significant Beneficial Owner filing; GLEIF LEI for parent links; OpenCorporates; screen on OpenSanctions plus the primary OFAC/OFSI/EU/UN lists.");
+  add(/usd leg|unnecessary us nexus/.test(t),
+    "Switch off the USD leg: settle in INR–AED (RBI–CBUAE framework) or CNY via CIPS, so no US correspondent bank touches the funds.",
+    "INR–AED: State Bank of India or Bank of Baroda (Special Rupee Vostro account) paired with Emirates NBD or Mashreq. CNY: Bank of China or ICBC via CIPS. Confirm the account is live with the bank.");
+  add(/spfs — risk/.test(t),
+    "Drop SPFS. Move to INR–AED local settlement or a regulated bank route the receiving bank will accept in writing.",
+    "RBI–CBUAE local currency framework; get the receiving bank's written acceptance first.");
+  add(/stablecoin/.test(t),
+    "If settling in stablecoin, use a VARA- or ADGM-licensed provider, apply the Travel Rule, and use an AED-backed token for any UAE-mainland payment.",
+    "VARA-licensed VASPs (Dubai) and ADGM FSRA exchanges — check the name on the VARA or FSRA public register; AED stablecoin issuers licensed by the CBUAE.");
+  add(/export-control|high-priority|controlled goods/.test(t),
+    "Obtain an end-user certificate and a no-re-export clause, and confirm there is no US-origin or US-technology content in the goods (EAR reach follows the goods).",
+    "Check the item against India's DGFT SCOMET list; confirm origin with the manufacturer; screen the end user against the BIS Entity List.");
+  add(/inward fdi/.test(t),
+    "Confirm the FDI route and the sector cap, then file FC-GPR through the AD bank on the RBI FIRMS portal.",
+    "India FEMA FDI rules; RBI FIRMS portal; the AD (authorised dealer) bank handles the filing.");
+  add(/end user unknown/.test(t),
+    "Obtain and screen an end-user statement before shipment.",
+    "Screen on OpenSanctions plus the primary lists and the BIS Entity List.");
+  add(/possible match/.test(t),
+    "Resolve the possible name match on identifiers — registration number, registered address, date of incorporation — before proceeding.",
+    "Compare against the OFAC/OFSI/EU/UN entry identifiers; use GLEIF or OpenCorporates for registration data.");
+  if(!out.length)out.push({do:"Proceed with standard documentation. Keep the screening record on file and re-screen before payment.",
+    who:"Re-screen on OpenSanctions plus the primary OFAC/OFSI/EU/UN lists; they change most weeks."});
+  return out;
+}
 function renderResolve(A){
   const {R,verdict}=resolve(A);
-  $("verdict").className="verdict "+verdict[0];
-  $("verdict").innerHTML=`<span class="pill ${verdict[0]}" style="background:var(--panel)">${verdict[1]}</span><span>${esc(verdict[2])}</span>`;
-  const pc={crit:"p-crit",warn:"p-warn",ok:"p-ok",info:"p-n"},pl={crit:"Must fix",warn:"Resolve first",ok:"Clear",info:"Recommended"};
-  $("fix").innerHTML=R.map(r=>`<article><header><span class="pill ${pc[r.sev]}">${pl[r.sev]}</span><h3>${esc(r.title)}</h3></header><p style="margin:0">${esc(r.problem)}</p><ol>${r.steps.map(s=>`<li>${esc(s)}</li>`).join("")}</ol><p class="law" style="margin:0">${r.law}</p></article>`).join("");
-  $("localLaw").innerHTML=localFramework(A).map(([k,v])=>`<article><header><h3>${esc(k)}</h3></header><ul>${v.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></article>`).join("")||'<p class="hint">Choose India, UAE, China, Kazakhstan or Russia in the corridor to see local rules.</p>';
+  $("verdict").className="verdict";
+  $("verdict").innerHTML=`<span class="pill ${verdict[0]}">${esc(verdict[1])}</span><span>${esc(verdict[2])}</span>`;
+  const rank={crit:0,warn:1,info:2,ok:3};
+  const sorted=R.slice().sort((a,b)=>rank[a.sev]-rank[b.sev]);
+  const pc={crit:"p-crit",warn:"p-warn",ok:"p-ok",info:"p-n"},pl={crit:"Must fix",warn:"Resolve first",ok:"Clear",info:"Note"};
+  const card=r=>`<article><header><span class="pill ${pc[r.sev]}">${pl[r.sev]}</span><h3>${esc(r.title)}</h3></header><p style="margin:0">${esc(r.problem)}</p><ol>${r.steps.map(x=>`<li>${esc(x)}</li>`).join("")}</ol><p class="law" style="margin:0">${r.law}</p></article>`;
+  const mustfix=sorted.filter(r=>r.sev==="crit"||r.sev==="warn");
+  const rest=sorted.filter(r=>r.sev==="info"||r.sev==="ok");
+  const plan=actionPlan(A);
+  const planCard=`<article class="plan"><header><span class="pill p-n">Recommended</span><h3>Do exactly this</h3></header><ol>${plan.map(p=>`<li><b>${esc(p.do)}</b><div class="who">Providers — ${esc(p.who)}</div></li>`).join("")}</ol><p class="law" style="margin:0"><b>Providers checked against open licence registers and sanctions data; confirm each one's current status before relying on it.</b></p></article>`;
+  $("fix").innerHTML=mustfix.map(card).join("")+planCard+rest.map(card).join("");
+  $("localLaw").innerHTML=localFramework(A).map(([k,v])=>`<article><header><h3>${esc(k)}</h3></header><ul>${v.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></article>`).join("")||'<p class="hint">Name a corridor country to see local rules.</p>';
   return R;
 }
 function setView(v){
@@ -719,21 +665,18 @@ function setView(v){
 }
 $("vRisk").onclick=()=>setView("risks");$("vRes").onclick=()=>setView("resolve");
 
-// directory
-const DIR=[["Banks and payment providers","INR–AED settlement, trade finance",0,6],["Law firms","India, UAE, onward markets",0,8],["Cargo insurers","Marine and credit cover",0,4],["Freight and shipping brokers","Mumbai, Mundra, Jebel Ali",0,5],["Tax advisers","Transfer pricing, VAT, GST",0,4],["VARA-licensed VASPs","Regulated stablecoin settlement",0,3]];
-$("dir").innerHTML=DIR.map(x=>`<div><b>${esc(x[0])}</b><small>${esc(x[1])}</small><span class="pill p-warn" style="align-self:flex-start;margin-top:4px">Recruiting · ${x[2]} of ${x[3]}</span></div>`).join("");
+
 
 // prompt wiring
-$("examples").innerHTML=EXAMPLES.map((e,i)=>`<button type="button" class="ghost" data-i="${i}">${e[0]}</button>`).join("");
-$("examples").querySelectorAll("button").forEach(b=>b.onclick=()=>{$("prompt").value=EXAMPLES[+b.dataset.i][1];analysePrompt()});
 $("goBtn").onclick=analysePrompt;
 $("f").addEventListener("submit",e=>e.preventDefault());
 
 $("copyBtn").onclick=async()=>{const txt=$("memo").innerText;try{await navigator.clipboard.writeText(txt);$("copyBtn").textContent="Copied"}catch(e){const r=document.createRange();r.selectNodeContents($("memo"));const s=getSelection();s.removeAllRanges();s.addRange(r);$("copyBtn").textContent="Selected, press copy"}setTimeout(()=>$("copyBtn").textContent="Copy memo",1800)};
 $("counselBtn").onclick=()=>{$("counsel").hidden=!$("counsel").hidden};
 
-$("prompt").value=EXAMPLES[0][1];
-analysePrompt();
+// empty resting state until the user analyses
+$("ratingLabel").innerHTML='<span class="pill p-n">Awaiting a scenario</span>';
+$("ratingSub").textContent="Describe a transaction on the left and press Analyse.";
 
 // AI drafting via the viewer's Claude
 (async()=>{
@@ -789,7 +732,7 @@ Rules:
 - Use the local law of each corridor state (India, UAE and any others listed): RBI and FEMA rules, Special Rupee Vostro Accounts, DGFT SCOMET, UAE Cabinet Decision 74 of 2020, UAE UBO rules, VARA and CBUAE payment token rules, and China's Anti-Foreign Sanctions Law where relevant.
 - Use only the facts given; say what must be obtained where facts are missing.
 
-Use these markdown headings (## ): Verdict; Steps before contract; Steps before shipment; Payment route; Documents to keep on file; When to escalate to counsel. Bullet lists, about 500–800 words. No title line.
+Structure it with these markdown headings (## ), in this order: Verdict; Must fix first (the binding prohibitions and highest-risk items, each with the exact action); Recommended plan (for each must-fix item, state exactly what to do and name the specific service providers — banks, VASPs, registries, insurers — that actually support that fix, noting that their current licence status should be verified on the relevant public register); Payment route; Documents to keep on file; When to escalate to counsel. Bullet lists, about 500–800 words. No title line. Do not list service providers in a section of their own — weave each named provider into the step it enables.
 
 FACTS:
 ${JSON.stringify({transaction:A.d,rail:railName(A.d.rail),screening:A.results.map(r=>({name:r.name,role:r.role,result:r.r.status,match:r.r.status!=="clear"?r.r.e.n+" ("+r.r.e.l.join(", ")+")":null})),aggregateDesignatedOwnership:A.aggregate,identifiedOwnership:A.totalPct,issues:R.map(r=>r.title+": "+r.problem)},null,1)}`;
