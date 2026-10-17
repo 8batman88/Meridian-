@@ -89,6 +89,10 @@ td.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums;text-align:ri
 .prompt-h{font-size:22px;font-weight:600;letter-spacing:-.01em;margin:0 0 6px}
 .fix article.plan{border:1.5px solid var(--ink)}
 .fix .who{font-size:12px;color:var(--muted);margin-top:3px}
+.plan-list>li{margin-bottom:12px}
+.plan-list .risk-line{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.plan-detail{font-size:13px;color:var(--muted);margin:3px 0}
+.plan-do{margin:2px 0}
 #prompt{min-height:160px;width:100%;font-family:var(--f-ui);font-size:15px;line-height:1.5;border:1px solid var(--line);border-radius:6px;padding:12px;background:var(--bg);color:var(--ink);resize:vertical}
 .fix ol,.fix ul{margin:0;padding-left:20px;display:grid;gap:4px}
 .fix .law{font-size:12px;color:var(--muted);border-top:1px dashed var(--line);padding-top:8px}
@@ -605,42 +609,59 @@ function localFramework(A){
   if(c.has("Russia"))L.push(["Russia",["Counter-sanctions and capital controls (approval for some transactions with 'unfriendly' state parties)","SPFS and rouble settlement rules"]]);
   return L;
 }
-// Specific action plan built from the MUST FIX / warn items, each naming the
-// providers that actually support that fix (verify current licence status at source).
+// For each risk shown in "Show risks", pair it with its resolution and the
+// providers that actually support that fix. Drives the Recommended plan.
+function resolveFor(title){
+  const t=title.toLowerCase();
+  if(/prohibited party|prohibited ownership|russia prohibitions|oil price cap applies|spfs — eu|blocked by ownership/.test(t))
+    return{do:"Do not proceed as structured. Exit, apply for a licence, or remove the UK/EU/US nexus (provider, insurer or currency) and change counterparty.",
+      who:"Licensing: OFSI (UK), OFAC (US) or the national authority — check for an existing general licence on the regulator's own site first."};
+  if(/secondary-sanctions|non-binding designation|ownership — secondary|majority designated|minority/.test(t))
+    return{do:"Lawful under Indian/UAE law, but high-risk: get board sign-off on the residual secondary-sanctions risk and route it through a provider that accepts the business after its own review.",
+      who:"A bank without US-correspondent exposure (many regional banks still decline). Verify its Russia/sanctions policy directly and its correspondents via GLEIF before onboarding."};
+  if(/western-currency leg|convert the/.test(t))
+    return{do:"Take the USD/GBP/EUR figure as the value to move and settle the equivalent on a non-Western rail, so no US/UK/EU correspondent touches the funds.",
+      who:"AED/INR: State Bank of India or Bank of Baroda (Special Rupee Vostro) with Emirates NBD or Mashreq. CNY: Bank of China or ICBC via CIPS. RUB: a bank that accepts it after review. Stablecoin: a VARA-licensed VASP (AED token for UAE-mainland). Fix the FX reference and value date in the contract."};
+  if(/source of funds|source of wealth|ownership gap/.test(t))
+    return{do:"Obtain the counterparty's register, a UBO declaration for every holder above 25%, and documentary source of funds or wealth — then re-screen every new name.",
+      who:"UAE UBO register (Cabinet Decision 109/2023); India MCA Significant Beneficial Owner filing; GLEIF LEI for parent links; OpenCorporates; screen on OpenSanctions plus the primary OFAC/OFSI/EU/UN lists."};
+  if(/inbound receipt/.test(t))
+    return{do:"Document the underlying contract and purpose code, and settle through a Special Rupee Vostro account so the receipt is on a clean rail.",
+      who:"RBI–CBUAE framework via State Bank of India or Bank of Baroda; the AD bank will ask for the purpose code and supporting papers."};
+  if(/inward fdi/.test(t))
+    return{do:"Confirm the FDI route and sector cap, then file FC-GPR through the AD bank on the RBI FIRMS portal.",
+      who:"India FEMA FDI rules; RBI FIRMS portal; the AD (authorised dealer) bank handles the filing."};
+  if(/spfs — risk/.test(t))
+    return{do:"Drop SPFS. Move to INR–AED local settlement or a regulated bank route the receiving bank will accept in writing.",
+      who:"RBI–CBUAE local currency framework; get the receiving bank's written acceptance first."};
+  if(/stablecoin/.test(t))
+    return{do:"If settling in stablecoin, use a VARA- or ADGM-licensed provider, apply the Travel Rule, and use an AED-backed token for any UAE-mainland payment.",
+      who:"VARA-licensed VASPs (Dubai) and ADGM FSRA exchanges — check the name on the VARA/FSRA register; AED stablecoin issuers licensed by the CBUAE."};
+  if(/export-control|high-priority|controlled goods/.test(t))
+    return{do:"Obtain an end-user certificate and a no-re-export clause, and confirm there is no US-origin or US-technology content (EAR reach follows the goods).",
+      who:"Check the item against India's DGFT SCOMET list; confirm origin with the manufacturer; screen the end user against the BIS Entity List."};
+  if(/end user unknown/.test(t))
+    return{do:"Obtain and screen an end-user statement before shipment.",
+      who:"Screen on OpenSanctions plus the primary lists and the BIS Entity List."};
+  if(/possible match/.test(t))
+    return{do:"Resolve the possible name match on identifiers — registration number, registered address, date of incorporation — before proceeding.",
+      who:"Compare against the OFAC/OFSI/EU/UN entry identifiers; use GLEIF or OpenCorporates for registration data."};
+  if(/russia-related trade/.test(t))
+    return{do:"Keep the stack free of any UK/EU/US person and confirm the goods or services are not prohibited, so the trade stays lawful under Indian/UAE law.",
+      who:"Settle via Special Rupee Vostro (RBI–CBUAE); use a bank that accepts Russia-related business after review; re-screen all parties on OpenSanctions plus the primary lists."};
+  return null;
+}
 function actionPlan(A){
-  const t=A.flags.filter(f=>f[0]==="crit"||f[0]==="warn").map(f=>f[1]).join(" | ").toLowerCase();
-  const out=[],add=(c,doIt,who)=>{if(c)out.push({do:doIt,who:who})};
-  add(/prohibited party|prohibited ownership|russia prohibitions|oil price cap applies|spfs — eu/.test(t),
-    "Do not proceed as structured. Exit, apply for a licence, or remove the UK/EU/US nexus (provider, insurer or currency) and change counterparty.",
-    "Licensing: OFSI (UK), OFAC (US) or the relevant national authority — check for an existing general licence on the regulator's own site before applying.");
-  add(/secondary-sanctions|non-binding designation|ownership — secondary|majority designated|minority/.test(t),
-    "Treat as lawful under Indian/UAE law but high-risk. Get board sign-off on the residual secondary-sanctions risk and route it through a provider that accepts the business after its own review.",
-    "Use a bank without US-correspondent exposure (many regional banks still decline). Verify each bank's own Russia/sanctions policy directly and confirm its correspondents via GLEIF before onboarding.");
-  add(/source of funds|source of wealth|ownership gap|inbound receipt/.test(t),
-    "Obtain the counterparty's register, a UBO declaration for every holder above 25%, and documentary source of funds or wealth — then re-screen every new name.",
-    "UAE UBO register (Cabinet Decision 109/2023); India MCA Significant Beneficial Owner filing; GLEIF LEI for parent links; OpenCorporates; screen on OpenSanctions plus the primary OFAC/OFSI/EU/UN lists.");
-  add(/western-currency leg|convert the .* leg|usd leg|unnecessary us nexus/.test(t),
-    "Take the USD/GBP/EUR figure as the value to move, and settle the equivalent on a non-Western rail so no US/UK/EU correspondent touches the funds — AED or INR (RBI–CBUAE), CNY via CIPS, RUB where every party is undesignated, or a regulated AED/USDT stablecoin.",
-    "AED/INR: State Bank of India or Bank of Baroda (Special Rupee Vostro) with Emirates NBD or Mashreq. CNY: Bank of China or ICBC via CIPS. RUB: a bank that accepts the business after its own review. Stablecoin: a VARA-licensed VASP (AED token for UAE-mainland; confirm the USDT issuer's freeze policy). Fix the FX reference and value date in the contract.");
-  add(/spfs — risk/.test(t),
-    "Drop SPFS. Move to INR–AED local settlement or a regulated bank route the receiving bank will accept in writing.",
-    "RBI–CBUAE local currency framework; get the receiving bank's written acceptance first.");
-  add(/stablecoin/.test(t),
-    "If settling in stablecoin, use a VARA- or ADGM-licensed provider, apply the Travel Rule, and use an AED-backed token for any UAE-mainland payment.",
-    "VARA-licensed VASPs (Dubai) and ADGM FSRA exchanges — check the name on the VARA or FSRA public register; AED stablecoin issuers licensed by the CBUAE.");
-  add(/export-control|high-priority|controlled goods/.test(t),
-    "Obtain an end-user certificate and a no-re-export clause, and confirm there is no US-origin or US-technology content in the goods (EAR reach follows the goods).",
-    "Check the item against India's DGFT SCOMET list; confirm origin with the manufacturer; screen the end user against the BIS Entity List.");
-  add(/inward fdi/.test(t),
-    "Confirm the FDI route and the sector cap, then file FC-GPR through the AD bank on the RBI FIRMS portal.",
-    "India FEMA FDI rules; RBI FIRMS portal; the AD (authorised dealer) bank handles the filing.");
-  add(/end user unknown/.test(t),
-    "Obtain and screen an end-user statement before shipment.",
-    "Screen on OpenSanctions plus the primary lists and the BIS Entity List.");
-  add(/possible match/.test(t),
-    "Resolve the possible name match on identifiers — registration number, registered address, date of incorporation — before proceeding.",
-    "Compare against the OFAC/OFSI/EU/UN entry identifiers; use GLEIF or OpenCorporates for registration data.");
-  if(!out.length)out.push({do:"Proceed with standard documentation. Keep the screening record on file and re-screen before payment.",
+  const rank={crit:0,warn:1,info:2,ok:3};
+  const flags=A.flags.filter(f=>f[3]!=="N").slice().sort((a,b)=>rank[a[0]]-rank[b[0]]);
+  const out=[],seen=new Set();
+  flags.forEach(f=>{
+    const r=resolveFor(f[1]); if(!r)return;
+    const k=f[1]+"|"+r.do; if(seen.has(k))return; seen.add(k);
+    out.push({risk:f[1],detail:f[2],sev:f[0],do:r.do,who:r.who});
+  });
+  if(!out.length)out.push({risk:"No prohibitions or red flags",detail:"Nothing on the information given.",sev:"ok",
+    do:"Proceed with standard documentation. Keep the screening record on file and re-screen before payment.",
     who:"Re-screen on OpenSanctions plus the primary OFAC/OFSI/EU/UN lists; they change most weeks."});
   return out;
 }
@@ -655,7 +676,8 @@ function renderResolve(A){
   const mustfix=sorted.filter(r=>r.sev==="crit"||r.sev==="warn");
   const rest=sorted.filter(r=>r.sev==="info"||r.sev==="ok");
   const plan=actionPlan(A);
-  const planCard=`<article class="plan"><header><span class="pill p-n">Recommended</span><h3>Do exactly this</h3></header><ol>${plan.map(p=>`<li><b>${esc(p.do)}</b><div class="who">Providers — ${esc(p.who)}</div></li>`).join("")}</ol><p class="law" style="margin:0"><b>Providers checked against open licence registers and sanctions data; confirm each one's current status before relying on it.</b></p></article>`;
+  const sevlab={crit:"Must fix",warn:"Resolve",info:"Note",ok:"Clear"};
+  const planCard=`<article class="plan"><header><span class="pill p-n">Recommended</span><h3>Risk → resolution</h3></header><ol class="plan-list">${plan.map(p=>`<li><div class="risk-line"><span class="pill ${pc[p.sev]||"p-n"}">${sevlab[p.sev]||"Note"}</span> <b>${esc(p.risk)}</b></div><div class="plan-detail">${esc(p.detail)}</div><div class="plan-do"><b>Resolution:</b> ${esc(p.do)}</div><div class="who">Providers — ${esc(p.who)}</div></li>`).join("")}</ol><p class="law" style="margin:0"><b>Providers checked against open licence registers and sanctions data; confirm each one's current status before relying on it.</b></p></article>`;
   $("fix").innerHTML=mustfix.map(card).join("")+planCard+rest.map(card).join("");
   $("localLaw").innerHTML=localFramework(A).map(([k,v])=>`<article><header><h3>${esc(k)}</h3></header><ul>${v.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></article>`).join("")||'<p class="hint">Name a corridor country to see local rules.</p>';
   return R;
